@@ -1,13 +1,18 @@
-# SVault-Engine
+# SNetT-Engine
 
-SVault-Engine is the core engine for [SVault](https://github.com/Owbird/SVault). It's a vault-based Virtual File System offering secure file encryption, cross-device sharing, and file server hosting.
+SNetT-Engine is the core engine for [SNetT](https://github.com/Owbird/SNetT). It is a Go package and CLI that provides a set of tools to manage your files over a network.
+
+## Features
+
+- **File Sharing**: Securely share files between devices using a simple code. Based on [Magic Wormhole](https://www.lothar.com/~warner/MagicWormhole-PyCon2016.pdf)
+- **File Server**: Host a directory of files with a web-based UI for browsing, downloading, and uploading.
 
 ## Installation
 
-To install SVault-Engine, use the `go install` command or download the latest [release](https://github.com/Owbird/SVault-Engine/releases):
+To install SNetT-Engine, use the `go install` command or download the latest [release](https://github.com/Owbird/SNetT-Engine/releases):
 
 ```bash
-go install github.com/Owbird/SVault-Engine@latest
+go install github.com/Owbird/SNetT-Engine@latest
 ```
 
 ## Usage
@@ -17,23 +22,41 @@ go install github.com/Owbird/SVault-Engine@latest
 Run the main program:
 
 ```bash
-SVault-Engine [command]
+SNetT-Engine [command]
+```
+
+#### Share a file
+
+```bash
+SNetT-Engine server share -f <file_path>
+```
+
+#### Receive a file
+
+```bash
+SNetT-Engine server receive -c <CODE>
+```
+
+#### Start the file server
+
+```bash
+SNetT-Engine server start -d <directory_path>
 ```
 
 ### Go Package
 
-To use SVault-Engine as a package in your Go application, import it and utilize its features:
+To use SNetT-Engine as a package in your Go application, import it and utilize its features:
 
 ```go
-import "github.com/Owbird/SVault-Engine/pkg/vault"
-
+import "github.com/Owbird/SNetT-Engine/pkg/server"
 
 func main() {
-    vault := vault.NewVault()
+    server := server.NewServer("./", nil)
+    server.Start()
 }
 ```
 
-For detailed documentation, visit the [Go package documentation](https://pkg.go.dev/github.com/Owbird/SVault-Engine).
+For detailed documentation, visit the [Go package documentation](https://pkg.go.dev/github.com/Owbird/SNetT-Engine).
 
 ## Contributing
 

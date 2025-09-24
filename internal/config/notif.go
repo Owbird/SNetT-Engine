@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/Owbird/SVault-Engine/pkg/models"
+	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/atotto/clipboard"
 	"github.com/martinlindhe/notify"
 )
@@ -29,7 +29,7 @@ func (nc *NotifConfig) GetAllowNotif() bool {
 
 func (nc *NotifConfig) SendNotification(notification models.Notification) {
 	if nc.GetAllowNotif() {
-		notify.Notify("SVault", notification.Title, notification.Body, "")
+		notify.Notify("SNetT", notification.Title, notification.Body, "")
 	}
 
 	if notification.ClipboardText != "" {

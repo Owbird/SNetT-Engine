@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 )
 
-func GetSVaultDir() (string, error) {
+func GetSNetTDir() (string, error) {
 	userDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	return filepath.Join(userDir, ".svault"), nil
+	return filepath.Join(userDir, ".snett"), nil
 }
 
 func GetLocalIp() (string, error) {

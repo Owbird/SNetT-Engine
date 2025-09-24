@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/Owbird/SVault-Engine/internal/config"
-	"github.com/Owbird/SVault-Engine/internal/utils"
+	"github.com/Owbird/SNetT-Engine/internal/config"
+	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/spf13/viper"
 )
 
@@ -20,15 +20,15 @@ type AppConfig struct {
 }
 
 // Gets the app configuration from
-// svault.toml with default values
+// snett.toml with default values
 // if absent
 func NewAppConfig() *AppConfig {
-	userDir, err := utils.GetSVaultDir()
+	userDir, err := utils.GetSNetTDir()
 	if err != nil {
 		log.Fatalln("Failed to get user dir")
 	}
 
-	viper.SetConfigName("svault")
+	viper.SetConfigName("snett")
 	viper.SetConfigType("toml")
 
 	viper.AddConfigPath(userDir)
@@ -69,7 +69,7 @@ func (ac *AppConfig) GetNotifConfig() *config.NotifConfig {
 	return ac.notification
 }
 
-// Save saves the server configuration to svault.toml
+// Save saves the server configuration to snett.toml
 func (ac *AppConfig) Save() error {
 	viper.Set("server.name", ac.server.GetName())
 	viper.Set("server.allowUploads", ac.server.GetAllowUploads())

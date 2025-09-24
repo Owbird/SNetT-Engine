@@ -13,9 +13,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Owbird/SVault-Engine/internal/config"
-	"github.com/Owbird/SVault-Engine/internal/utils"
-	"github.com/Owbird/SVault-Engine/pkg/models"
+	"github.com/Owbird/SNetT-Engine/internal/config"
+	"github.com/Owbird/SNetT-Engine/internal/utils"
+	"github.com/Owbird/SNetT-Engine/pkg/models"
 )
 
 type Handlers struct {

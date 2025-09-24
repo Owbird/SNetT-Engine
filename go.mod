@@ -1,4 +1,4 @@
-module github.com/Owbird/SVault-Engine
+module github.com/Owbird/SNetT-Engine
 
 go 1.22.1
 

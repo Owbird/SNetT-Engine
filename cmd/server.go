@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Owbird/SVault-Engine/pkg/models"
-	"github.com/Owbird/SVault-Engine/pkg/server"
+	"github.com/Owbird/SNetT-Engine/pkg/models"
+	"github.com/Owbird/SNetT-Engine/pkg/server"
 	"github.com/spf13/cobra"
 )
 

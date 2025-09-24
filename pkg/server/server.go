@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/Owbird/SVault-Engine/internal/utils"
-	"github.com/Owbird/SVault-Engine/pkg/config"
-	"github.com/Owbird/SVault-Engine/pkg/models"
-	"github.com/Owbird/SVault-Engine/pkg/server/handlers"
+	"github.com/Owbird/SNetT-Engine/internal/utils"
+	"github.com/Owbird/SNetT-Engine/pkg/config"
+	"github.com/Owbird/SNetT-Engine/pkg/models"
+	"github.com/Owbird/SNetT-Engine/pkg/server/handlers"
 	"github.com/localtunnel/go-localtunnel"
 	"github.com/psanford/wormhole-william/wormhole"
 	"github.com/rs/cors"
@@ -224,7 +224,7 @@ func (s *Server) Share(file string, callbacks ShareCallBacks) {
 }
 
 // Receive file from device through wormhole
-// Saves file to the svault dir in the Downloads directory
+// Saves file to the snett dir in the Downloads directory
 func (s *Server) Receive(code string) error {
 	var c wormhole.Client
 
@@ -238,10 +238,10 @@ func (s *Server) Receive(code string) error {
 	if err != nil {
 		return fmt.Errorf("failed to determine home directory: %w", err)
 	}
-	downloadsDir := filepath.Join(homeDir, "Downloads", "svault")
+	downloadsDir := filepath.Join(homeDir, "Downloads", "snett")
 
 	if err := os.MkdirAll(downloadsDir, 0755); err != nil {
-		return fmt.Errorf("failed to create svault directory: %w", err)
+		return fmt.Errorf("failed to create snett directory: %w", err)
 	}
 
 	destFilePath := filepath.Join(downloadsDir, filepath.Base(fileInfo.Name))
