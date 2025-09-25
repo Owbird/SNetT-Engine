@@ -16,50 +16,6 @@ var serverCmd = &cobra.Command{
 	Long:  `Manage file server`,
 }
 
-var shareCmd = &cobra.Command{
-	Use:   "share",
-	Short: "Share file to device",
-	Long:  `Share file to device`,
-	Run: func(cmd *cobra.Command, args []string) {
-		svr := server.NewServer("", nil)
-		file, err := cmd.Flags().GetString("file")
-		if err != nil {
-			log.Fatalf("Failed to get 'file' flag: %v", err)
-		}
-
-		svr.Share(file, server.ShareCallBacks{
-			OnSendErr: func(err error) {
-				log.Fatalf("Send error: %s", err)
-			},
-			OnFileSent: func() {
-				log.Println("File sent!")
-			},
-			OnCodeReceive: func(code string) {
-				log.Println("Code: ", code)
-			},
-			OnProgressChange: func(progress models.FileShareProgress) {
-				log.Printf("Sent: %v/%v (%v%%)", progress.Bytes, progress.Total, progress.Percentage)
-			},
-		})
-	},
-}
-
-var receiveCmd = &cobra.Command{
-	Use:   "receive",
-	Short: "Receive file from device",
-	Long:  `Receive file from device`,
-	Run: func(cmd *cobra.Command, args []string) {
-		server := server.NewServer("", nil)
-		code, err := cmd.Flags().GetString("code")
-		if err != nil {
-			log.Fatalf("Failed to get 'code' flag: %v", err)
-		}
-		if err := server.Receive(code); err != nil {
-			log.Fatalf("Failed to receive file: %v", err)
-		}
-	},
-}
-
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the server",
@@ -122,16 +78,8 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.AddCommand(startCmd)
-	serverCmd.AddCommand(shareCmd)
-	serverCmd.AddCommand(receiveCmd)
 
 	startCmd.Flags().StringP("dir", "d", "", "Directory to serve")
 
-	shareCmd.Flags().StringP("file", "f", "", "File to share")
-
-	receiveCmd.Flags().StringP("code", "c", "", "Code from other device")
-
 	startCmd.MarkFlagRequired("dir")
-	shareCmd.MarkFlagRequired("file")
-	receiveCmd.MarkFlagRequired("code")
 }
