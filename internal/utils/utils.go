@@ -16,21 +16,31 @@ func GetSNetTDir() (string, error) {
 	return filepath.Join(userDir, ".snett"), nil
 }
 
-func GetLocalIp() (string, error) {
-	addrs, err := net.InterfaceAddrs()
+func GetLocalIp() ([]string, error) {
+	localIps := []string{}
+
+	ifs, err := net.Interfaces()
 	if err != nil {
-		return "0.0.0.0", err
+		return localIps, err
 	}
 
-	for _, addr := range addrs {
-		ip, ok := addr.(*net.IPNet)
-		if ok && !ip.IP.IsLoopback() {
-			if ip.IP.To4() != nil {
-				return ip.IP.String(), nil
+	for _, iface := range ifs {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			ip, ok := addr.(*net.IPNet)
+			if ok && !ip.IP.IsLoopback() {
+				v4 := ip.IP.To4()
+				if v4 != nil {
+					localIps = append(localIps, v4.String())
+				}
 			}
 		}
 	}
-	return "0.0.0.0", nil
+	return localIps, nil
 }
 
 func FmtBytes(bytes int64) string {

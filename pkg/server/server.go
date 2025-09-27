@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -71,7 +72,7 @@ func (s *Server) Start() {
 		Type:    models.API_LOG,
 	}
 
-	host, err := utils.GetLocalIp()
+	hosts, err := utils.GetLocalIp()
 	if err != nil {
 		s.logCh <- models.ServerLog{
 			Error: err,
@@ -80,9 +81,11 @@ func (s *Server) Start() {
 		return
 	}
 
-	s.logCh <- models.ServerLog{
-		Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(PORT)),
-		Type:    models.SERVE_WEB_UI_NETWORK,
+	for _, host := range hosts {
+		s.logCh <- models.ServerLog{
+			Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(PORT)),
+			Type:    models.SERVE_WEB_UI_NETWORK,
+		}
 	}
 
 	go (func() {
@@ -142,6 +145,7 @@ func (s *Server) Start() {
 			Error: err,
 			Type:  models.API_LOG,
 		}
+		log.Fatalln(err)
 	}
 }
 
