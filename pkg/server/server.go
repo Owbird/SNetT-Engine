@@ -81,6 +81,8 @@ func (s *Server) Start() {
 		return
 	}
 
+	if len(hosts) == 0 {hosts = append(hosts, "localhost")}
+
 	for _, host := range hosts {
 		s.logCh <- models.ServerLog{
 			Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(PORT)),
