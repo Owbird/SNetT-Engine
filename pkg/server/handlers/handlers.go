@@ -244,9 +244,13 @@ func (h *Handlers) GetAssets(w http.ResponseWriter, r *http.Request) {
 	data, err := os.ReadFile(filepath.Join(cwd, "templates", path))
 	if err != nil {
 		fmt.Print(err)
+		http.NotFound(w, r)
+		return
 	}
-	if strings.HasSuffix(path, "js") {
+	if strings.HasSuffix(path, ".js") {
 		w.Header().Set("Content-Type", "text/javascript")
+	} else if strings.HasSuffix(path, ".css") {
+		w.Header().Set("Content-Type", "text/css")
 	}
 	_, err = w.Write(data)
 	if err != nil {
