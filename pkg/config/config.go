@@ -40,7 +40,7 @@ func NewAppConfig() *AppConfig {
 
 	viper.SetDefault("server.name", fmt.Sprintf("%v's Server", hostname))
 	viper.SetDefault("server.allowUploads", false)
-	viper.SetDefault("notification.allowNotif", true)
+	viper.SetDefault("notification.allowNotif", false)
 
 	err = viper.ReadInConfig()
 	if err != nil {

@@ -23,20 +23,9 @@ type Server struct {
 	logCh chan models.ServerLog
 }
 
-
 const (
 	PORT = 8080
 )
-
-var appConfig = config.NewAppConfig()
-
-func sendNotification(notif models.Notification) {
-	appConfig.GetNotifConfig().SendNotification(models.Notification{
-		Title:         notif.Title,
-		Body:          notif.Body,
-		ClipboardText: notif.ClipboardText,
-	})
-}
 
 func NewServer(dir string, logCh chan models.ServerLog) *Server {
 	return &Server{
@@ -46,7 +35,7 @@ func NewServer(dir string, logCh chan models.ServerLog) *Server {
 }
 
 // Starts starts and serves the specified dir
-func (s *Server) Start() {
+func (s *Server) Start(tempConfig config.AppConfig) {
 	s.logCh <- models.ServerLog{
 		Message: "Starting server",
 		Type:    models.API_LOG,
@@ -61,7 +50,9 @@ func (s *Server) Start() {
 		return
 	}
 
-	if len(hosts) == 0 {hosts = append(hosts, "localhost")}
+	if len(hosts) == 0 {
+		hosts = append(hosts, "localhost")
+	}
 
 	for _, host := range hosts {
 		s.logCh <- models.ServerLog{
@@ -80,7 +71,7 @@ func (s *Server) Start() {
 			return
 		}
 
-		sendNotification(models.Notification{
+		tempConfig.GetNotifConfig().SendNotification(models.Notification{
 			Title:         "Web Server Ready",
 			Body:          "URL copied to clipboard",
 			ClipboardText: tunnel.URL(),
@@ -94,9 +85,7 @@ func (s *Server) Start() {
 
 	mux := http.NewServeMux()
 
-	serverConfig := appConfig.GetSeverConfig()
-
-	handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, serverConfig, appConfig.GetNotifConfig())
+	handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
 
 	mux.HandleFunc("/", handlerFuncs.GetFilesHandler)
 	mux.HandleFunc("/download", handlerFuncs.DownloadFileHandler)
@@ -130,4 +119,3 @@ func (s *Server) Start() {
 		log.Fatalln(err)
 	}
 }
-

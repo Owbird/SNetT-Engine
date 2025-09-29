@@ -4,9 +4,16 @@ import (
 	"log"
 	"sync"
 
+	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/Owbird/SNetT-Engine/pkg/server"
 	"github.com/spf13/cobra"
+)
+
+var (
+	appConfig    = config.NewAppConfig()
+	serverConfig = appConfig.GetSeverConfig()
+	notifConfig  = appConfig.GetNotifConfig()
 )
 
 // serverCmd represents the server command
@@ -67,8 +74,29 @@ var startCmd = &cobra.Command{
 
 		server := server.NewServer(dir, logCh)
 
+		allowUploads, err := cmd.Flags().GetBool("uploads")
+		if err != nil {
+			log.Fatalf("Failed to get 'uploads' flag: %v", err)
+		}
+
+		serverName, err := cmd.Flags().GetString("name")
+		if err != nil {
+			log.Fatalf("Failed to get 'name' flag: %v", err)
+		}
+
+		allowNotif, err := cmd.Flags().GetBool("notify")
+		if err != nil {
+			log.Fatalf("Failed to get 'notify' flag: %v", err)
+		}
+
+		serverConfig.SetAllowUploads(allowUploads)
+
+		serverConfig.SetName(serverName)
+
+		notifConfig.SetAllowNotif(allowNotif)
+
 		wg.Add(1)
-		go server.Start()
+		go server.Start(*appConfig)
 
 		wg.Wait()
 	},
@@ -80,6 +108,9 @@ func init() {
 	serverCmd.AddCommand(startCmd)
 
 	startCmd.Flags().StringP("dir", "d", "", "Directory to serve")
+	startCmd.Flags().StringP("name", "n", serverConfig.GetName(), "Directory to serve")
+	startCmd.Flags().Bool("uploads", serverConfig.GetAllowUploads(), "Allow uploads to directory")
+	startCmd.Flags().Bool("notify", notifConfig.GetAllowNotif(), "Allow notifications")
 
 	startCmd.MarkFlagRequired("dir")
 }
