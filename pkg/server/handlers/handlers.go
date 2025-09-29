@@ -90,7 +90,6 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 		Message: "Receiving files",
 		Type:    models.API_LOG,
 	}
-
 	reader, err := r.MultipartReader()
 	if err != nil {
 		log.Println(err)
@@ -98,7 +97,12 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uploadDir := r.FormValue("uploadDir")
+	var uploadDir string
+	type filePart struct {
+		fileName string
+		data     []byte
+	}
+	var files []filePart
 
 	for {
 		part, err := reader.NextPart()
@@ -106,42 +110,51 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if err != nil {
-			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Handle file parts only
-		if part.FileName() != "" {
-			filePath := filepath.Join(h.dir, uploadDir, part.FileName())
-
-			dst, err := os.Create(filePath)
+		if part.FileName() == "" {
+			buf, err := io.ReadAll(part)
 			if err != nil {
-				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			defer dst.Close()
-
-			if _, err := io.Copy(dst, part); err != nil {
-				log.Println(err)
+			if part.FormName() == "uploadDir" {
+				uploadDir = string(buf)
+			}
+		} else {
+			buf, err := io.ReadAll(part)
+			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
-			h.logCh <- models.ServerLog{
-				Message: fmt.Sprintf("File received at %v", filePath),
-				Type:    models.API_LOG,
-			}
-
-			h.notifConfig.SendNotification(models.Notification{
-				Title: "File received",
-				Body:  fmt.Sprintf("File %v received", part.FileName()),
+			files = append(files, filePart{
+				fileName: part.FileName(),
+				data:     buf,
 			})
 		}
 	}
 
-	return
+	for _, file := range files {
+		filePath := filepath.Join(h.dir, uploadDir, file.fileName)
+
+		// Create directory if it doesn't exist
+		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := os.WriteFile(filePath, file.data, 0644); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		h.logCh <- models.ServerLog{
+			Message: fmt.Sprintf("File received at %v", filePath),
+			Type:    models.API_LOG,
+		}
+	}
 }
 
 func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
