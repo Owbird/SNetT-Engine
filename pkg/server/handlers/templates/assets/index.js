@@ -119,3 +119,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+const searchInput = document.getElementById("search-input");
+const fileTable = document.querySelector(".file-table tbody");
+
+if (searchInput && fileTable) {
+  searchInput.addEventListener("input", (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const fileTableRows = fileTable.querySelectorAll("tr");
+
+    fileTableRows.forEach((row) => {
+      const fileNameElement = row.querySelector(".file-name");
+
+      if (fileNameElement) {
+        const fileName = fileNameElement.textContent.toLowerCase();
+        row.style.display = fileName.includes(searchTerm)
+          ? "table-row"
+          : "none";
+      }
+    });
+  });
+}
