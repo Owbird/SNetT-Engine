@@ -4,22 +4,28 @@ import (
 	"log"
 
 	"github.com/Owbird/SNetT-Engine/pkg/models"
-	"github.com/Owbird/SNetT-Engine/pkg/server"
+	"github.com/Owbird/SNetT-Engine/pkg/wormhole"
 	"github.com/spf13/cobra"
 )
 
-var wormholeSendCmd = &cobra.Command{
+var wormholeCmd = &cobra.Command{
+	Use:   "wormhole",
+	Short: "Manage files via a wormhole",
+	Long:  "Manage files via a wormhole",
+}
+
+var sendCmd = &cobra.Command{
 	Use:   "share",
 	Short: "Share file to device via the wormhole",
 	Long:  `Share file to device via the wormhole`,
 	Run: func(cmd *cobra.Command, args []string) {
-		svr := server.NewServer("", nil)
+		svr := wormhole.NewWormhole(nil)
 		file, err := cmd.Flags().GetString("file")
 		if err != nil {
 			log.Fatalf("Failed to get 'file' flag: %v", err)
 		}
 
-		svr.Share(file, server.ShareCallBacks{
+		svr.Share(file, wormhole.ShareCallBacks{
 			OnSendErr: func(err error) {
 				log.Fatalf("Send error: %s", err)
 			},
@@ -36,12 +42,12 @@ var wormholeSendCmd = &cobra.Command{
 	},
 }
 
-var wormholeRecvCommand = &cobra.Command{
+var RecvCommand = &cobra.Command{
 	Use:   "receive",
 	Short: "Receive file from device via the wormhole",
 	Long:  `Receive file from device via the wormhole`,
 	Run: func(cmd *cobra.Command, args []string) {
-		server := server.NewServer("", nil)
+		server := wormhole.NewWormhole(nil)
 		code, err := cmd.Flags().GetString("code")
 		if err != nil {
 			log.Fatalf("Failed to get 'code' flag: %v", err)
@@ -53,13 +59,15 @@ var wormholeRecvCommand = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(wormholeSendCmd)
-	rootCmd.AddCommand(wormholeRecvCommand)
+	rootCmd.AddCommand(wormholeCmd)
 
-	wormholeSendCmd.Flags().StringP("file", "f", "", "File to share")
+	wormholeCmd.AddCommand(sendCmd)
+	wormholeCmd.AddCommand(RecvCommand)
 
-	wormholeRecvCommand.Flags().StringP("code", "c", "", "Code from other device")
+	sendCmd.Flags().StringP("file", "f", "", "File to share")
 
-	wormholeSendCmd.MarkFlagRequired("file")
-	wormholeRecvCommand.MarkFlagRequired("code")
+	RecvCommand.Flags().StringP("code", "c", "", "Code from other device")
+
+	sendCmd.MarkFlagRequired("file")
+	RecvCommand.MarkFlagRequired("code")
 }
