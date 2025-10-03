@@ -40,6 +40,8 @@ func NewAppConfig() *AppConfig {
 
 	viper.SetDefault("server.name", fmt.Sprintf("%v's Server", hostname))
 	viper.SetDefault("server.allowUploads", false)
+	viper.SetDefault("server.allowOnline", false)
+	viper.SetDefault("server.port", 8080)
 	viper.SetDefault("notification.allowNotif", false)
 
 	err = viper.ReadInConfig()
@@ -54,6 +56,8 @@ func NewAppConfig() *AppConfig {
 
 	config.server.SetName(viper.GetString("server.name"))
 	config.server.SetAllowUploads(viper.GetBool("server.allowUploads"))
+	config.server.SetAllowOnline(viper.GetBool("server.allowOnline"))
+	config.server.SetPort(viper.GetInt("server.port"))
 	config.notification.SetAllowNotif(viper.GetBool("notification.allowNotif"))
 
 	return config
@@ -73,6 +77,8 @@ func (ac *AppConfig) GetNotifConfig() *config.NotifConfig {
 func (ac *AppConfig) Save() error {
 	viper.Set("server.name", ac.server.GetName())
 	viper.Set("server.allowUploads", ac.server.GetAllowUploads())
+	viper.Set("server.allowOnline", ac.server.GetAllowOnline())
+	viper.Set("server.port", ac.server.GetPort())
 	viper.Set("notification.allowNotif", ac.notification.GetAllowNotif())
 
 	return viper.WriteConfig()

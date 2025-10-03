@@ -23,10 +23,6 @@ type Server struct {
 	logCh chan models.ServerLog
 }
 
-const (
-	PORT = 8080
-)
-
 func NewServer(dir string, logCh chan models.ServerLog) *Server {
 	return &Server{
 		Dir:   dir,
@@ -36,6 +32,8 @@ func NewServer(dir string, logCh chan models.ServerLog) *Server {
 
 // Starts starts and serves the specified dir
 func (s *Server) Start(tempConfig config.AppConfig) {
+	port := tempConfig.GetSeverConfig().GetPort()
+
 	s.logCh <- models.ServerLog{
 		Message: "Starting server",
 		Type:    models.API_LOG,
@@ -56,32 +54,34 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 
 	for _, host := range hosts {
 		s.logCh <- models.ServerLog{
-			Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(PORT)),
+			Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(port)),
 			Type:    models.SERVE_WEB_UI_NETWORK,
 		}
 	}
 
-	go (func() {
-		tunnel, err := localtunnel.New(PORT, "localhost", localtunnel.Options{})
-		if err != nil {
-			s.logCh <- models.ServerLog{
-				Error: err,
-				Type:  models.SERVE_WEB_UI_REMOTE,
+	if tempConfig.GetSeverConfig().GetAllowOnline() {
+		go (func() {
+			tunnel, err := localtunnel.New(port, "localhost", localtunnel.Options{})
+			if err != nil {
+				s.logCh <- models.ServerLog{
+					Error: err,
+					Type:  models.SERVE_WEB_UI_REMOTE,
+				}
+				return
 			}
-			return
-		}
 
-		tempConfig.GetNotifConfig().SendNotification(models.Notification{
-			Title:         "Web Server Ready",
-			Body:          "URL copied to clipboard",
-			ClipboardText: tunnel.URL(),
-		})
+			tempConfig.GetNotifConfig().SendNotification(models.Notification{
+				Title:         "Web Server Ready",
+				Body:          "URL copied to clipboard",
+				ClipboardText: tunnel.URL(),
+			})
 
-		s.logCh <- models.ServerLog{
-			Message: tunnel.URL(),
-			Type:    models.SERVE_WEB_UI_REMOTE,
-		}
-	})()
+			s.logCh <- models.ServerLog{
+				Message: tunnel.URL(),
+				Type:    models.SERVE_WEB_UI_REMOTE,
+			}
+		})()
+	}
 
 	mux := http.NewServeMux()
 
@@ -106,11 +106,11 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	})
 
 	s.logCh <- models.ServerLog{
-		Message: fmt.Sprintf("Starting API on port %v from %v", PORT, s.Dir),
+		Message: fmt.Sprintf("Starting API on port %v from %v", port, s.Dir),
 		Type:    models.API_LOG,
 	}
 
-	err = http.ListenAndServe(fmt.Sprintf(":%v", PORT), corsOpts.Handler(mux))
+	err = http.ListenAndServe(fmt.Sprintf(":%v", port), corsOpts.Handler(mux))
 	if err != nil {
 		s.logCh <- models.ServerLog{
 			Error: err,

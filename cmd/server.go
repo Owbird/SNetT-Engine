@@ -79,6 +79,16 @@ var startCmd = &cobra.Command{
 			log.Fatalf("Failed to get 'uploads' flag: %v", err)
 		}
 
+		allowOnline, err := cmd.Flags().GetBool("online")
+		if err != nil {
+			log.Fatalf("Failed to get 'online' flag: %v", err)
+		}
+
+		port, err := cmd.Flags().GetInt("port")
+		if err != nil {
+			log.Fatalf("Failed to get 'port' flag: %v", err)
+		}
+
 		serverName, err := cmd.Flags().GetString("name")
 		if err != nil {
 			log.Fatalf("Failed to get 'name' flag: %v", err)
@@ -90,6 +100,8 @@ var startCmd = &cobra.Command{
 		}
 
 		serverConfig.SetAllowUploads(allowUploads)
+		serverConfig.SetAllowOnline(allowOnline)
+		serverConfig.SetPort(port)
 
 		serverConfig.SetName(serverName)
 
@@ -109,7 +121,9 @@ func init() {
 
 	startCmd.Flags().StringP("dir", "d", "", "Directory to serve")
 	startCmd.Flags().StringP("name", "n", serverConfig.GetName(), "Directory to serve")
+	startCmd.Flags().IntP("port", "p", serverConfig.GetPort(), "Port to host on")
 	startCmd.Flags().Bool("uploads", serverConfig.GetAllowUploads(), "Allow uploads to directory")
+	startCmd.Flags().Bool("online", serverConfig.GetAllowOnline(), "Allow online access to server")
 	startCmd.Flags().Bool("notify", notifConfig.GetAllowNotif(), "Allow notifications")
 
 	startCmd.MarkFlagRequired("dir")
