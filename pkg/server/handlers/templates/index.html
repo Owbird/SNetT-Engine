@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>{{ .ServerConfig.Name }}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <link rel="stylesheet" href="/assets/index.css" />
   </head>
   <body>
@@ -21,7 +25,9 @@
             </label>
             <input type="file" id="file-upload" name="files" multiple />
             <p class="drop-text">or drag and drop files here</p>
-            <button type="button" id="upload-button">Upload</button>
+            <button type="button" id="upload-button" class="hidden">
+              Upload
+            </button>
           </form>
         </div>
         <p id="upload-status"></p>
@@ -33,9 +39,16 @@
       <input type="search" id="search-input" placeholder="Search files..." />
     </div>
 
+    <div class="bulk-actions">
+      <button id="download-selected-btn" class="hidden">
+        Download Selected
+      </button>
+    </div>
+
     <table class="file-table">
       <thead>
         <tr>
+          <th><input type="checkbox" id="select-all-checkbox" /></th>
           <th>Name</th>
           <th>Size</th>
           <th>Type</th>
@@ -44,7 +57,15 @@
       </thead>
       <tbody>
         {{ range .Files }}
-        <tr>
+        <tr
+          data-file-path="{{$.CurrentPath}}/{{.Name}}"
+          data-is-dir="{{.IsDir}}"
+        >
+          <td>
+            {{ if not .IsDir }}
+            <input type="checkbox" class="file-checkbox" />
+            {{ end }}
+          </td>
           <td class="file-name-cell">
             <a
               href="{{ if .IsDir}} ?dir={{$.CurrentPath}}/{{.Name}} {{else}} # {{end}}"

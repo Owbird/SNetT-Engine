@@ -28,6 +28,10 @@ h1 {
   margin-top: 0;
 }
 
+.hidden {
+  display: none;
+}
+
 .breadcrumb-nav {
   background-color: white;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -193,6 +197,27 @@ h1 {
   font-size: 0.875rem;
 }
 
+.bulk-actions {
+  max-width: 56rem;
+  margin: 0 auto 1.5rem auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#download-selected-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#download-selected-btn:hover {
+  background-color: #1d4ed8;
+}
+
 .file-table {
   table-layout: auto;
   width: 100%;
@@ -225,9 +250,19 @@ h1 {
   background-color: #ccfbf1;
 }
 
+.file-table tbody tr.selected {
+  background-color: #dbeafe;
+}
+
 .file-table td {
   border: 1px solid #d1d5db;
   padding: 0.5rem;
+}
+
+.file-table th:first-child,
+.file-table td:first-child {
+  width: 2rem;
+  text-align: center;
 }
 
 .file-name-cell {

@@ -92,51 +92,122 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  dropArea.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropArea.classList.add("bg-teal-100");
-  });
+  if (dropArea) {
+    dropArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropArea.classList.add("bg-teal-100");
+    });
 
-  dropArea.addEventListener("dragleave", () => {
-    dropArea.classList.remove("bg-teal-100");
-  });
+    dropArea.addEventListener("dragleave", () => {
+      dropArea.classList.remove("bg-teal-100");
+    });
 
-  dropArea.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropArea.classList.remove("bg-teal-100");
-    files = e.dataTransfer.files;
-    updateUploadBtnLabel(files.length);
-  });
+    dropArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropArea.classList.remove("bg-teal-100");
+      files = e.dataTransfer.files;
+      updateUploadBtnLabel(files.length);
+    });
+  }
 
-  fileInput.addEventListener("change", () => {
-    files = fileInput.files;
-    updateUploadBtnLabel(files.length);
-  });
+  if (fileInput) {
+    fileInput.addEventListener("change", () => {
+      files = fileInput.files;
+      updateUploadBtnLabel(files.length);
+    });
+  }
 
-  uploadButton.addEventListener("click", () => {
-    if (files && files.length > 0) {
-      uploadFiles(files);
-    }
-  });
-});
-
-const searchInput = document.getElementById("search-input");
-const fileTable = document.querySelector(".file-table tbody");
-
-if (searchInput && fileTable) {
-  searchInput.addEventListener("input", (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const fileTableRows = fileTable.querySelectorAll("tr");
-
-    fileTableRows.forEach((row) => {
-      const fileNameElement = row.querySelector(".file-name");
-
-      if (fileNameElement) {
-        const fileName = fileNameElement.textContent.toLowerCase();
-        row.style.display = fileName.includes(searchTerm)
-          ? "table-row"
-          : "none";
+  if (uploadButton) {
+    uploadButton.addEventListener("click", () => {
+      if (files && files.length > 0) {
+        uploadFiles(files);
       }
     });
-  });
-}
+  }
+
+  const searchInput = document.getElementById("search-input");
+  const fileTable = document.querySelector(".file-table tbody");
+
+  if (searchInput && fileTable) {
+    searchInput.addEventListener("input", (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const fileTableRows = fileTable.querySelectorAll("tr");
+
+      fileTableRows.forEach((row) => {
+        const fileNameElement = row.querySelector(".file-name");
+
+        if (fileNameElement) {
+          const fileName = fileNameElement.textContent.toLowerCase();
+          row.style.display = fileName.includes(searchTerm)
+            ? "table-row"
+            : "none";
+        }
+      });
+    });
+  }
+
+  const selectAllCheckbox = document.getElementById("select-all-checkbox");
+  const fileCheckboxes = document.querySelectorAll(".file-checkbox");
+  const downloadSelectedBtn = document.getElementById("download-selected-btn");
+
+  if (selectAllCheckbox && fileCheckboxes.length > 0 && downloadSelectedBtn) {
+    const updateDownloadButton = () => {
+      const selectedFiles = document.querySelectorAll(
+        ".file-checkbox:checked",
+      );
+      if (selectedFiles.length > 0) {
+        downloadSelectedBtn.classList.remove("hidden");
+        downloadSelectedBtn.innerText = `Download ${selectedFiles.length} file(s)`;
+      } else {
+        downloadSelectedBtn.classList.add("hidden");
+      }
+    };
+
+    selectAllCheckbox.addEventListener("change", () => {
+      fileCheckboxes.forEach((checkbox) => {
+        checkbox.checked = selectAllCheckbox.checked;
+        checkbox
+          .closest("tr")
+          .classList.toggle("selected", selectAllCheckbox.checked);
+      });
+      updateDownloadButton();
+    });
+
+    fileCheckboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        checkbox.closest("tr").classList.toggle("selected", checkbox.checked);
+
+        if (!checkbox.checked) {
+          selectAllCheckbox.checked = false;
+        } else {
+          const allChecked = Array.from(fileCheckboxes).every((c) => c.checked);
+          selectAllCheckbox.checked = allChecked;
+        }
+        updateDownloadButton();
+      });
+    });
+
+    downloadSelectedBtn.addEventListener("click", () => {
+      const selectedFiles = [];
+      document
+        .querySelectorAll(".file-checkbox:checked")
+        .forEach((checkbox) => {
+          const filePath = checkbox.closest("tr").dataset.filePath;
+          if (filePath) {
+            selectedFiles.push(filePath);
+          }
+        });
+
+
+
+      if (selectedFiles.length > 0) {
+
+        const link = document.createElement("a");
+          link.href = `/download?file=${encodeURIComponent(selectedFiles.join(","))}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
+    });
+  }
+});

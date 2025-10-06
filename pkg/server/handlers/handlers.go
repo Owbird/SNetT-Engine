@@ -12,6 +12,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
+
+	"archive/zip"
 
 	"github.com/Owbird/SNetT-Engine/internal/config"
 	"github.com/Owbird/SNetT-Engine/internal/utils"
@@ -167,17 +170,83 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		file := filepath.Join(h.dir, query["file"][0])
+		files := strings.Split(query["file"][0], ",")
 
-		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(file)))
-		w.Header().Set("Content-Type", "application/octet-stream")
+		if len(files) > 1 {
 
-		h.logCh <- models.ServerLog{
-			Message: fmt.Sprintf("Downloading %v", file),
-			Type:    models.API_LOG,
+			tmpDir, err := os.MkdirTemp("", "snett-*")
+			if err != nil {
+				log.Println(err, "this")
+				http.Error(w, "Failed to download file", http.StatusInternalServerError)
+				return
+			}
+
+			archivePath := filepath.Join(tmpDir, fmt.Sprintf("snett-%v.zip", time.Now().UnixNano()), "")
+			archive, err := os.Create(archivePath)
+			if err != nil {
+				log.Println(err)
+				http.Error(w, "Failed to download file", http.StatusInternalServerError)
+				return
+			}
+			defer archive.Close()
+
+			zipWriter := zip.NewWriter(archive)
+
+			for _, f := range files {
+
+				filePath := filepath.Join(h.dir, f)
+
+				file, err := os.Open(filePath)
+				if err != nil {
+					log.Println(err)
+					http.Error(w, "Failed to download file", http.StatusInternalServerError)
+					return
+				}
+
+				defer file.Close()
+
+				zip, err := zipWriter.Create(f)
+				if err != nil {
+					log.Println(err)
+					http.Error(w, "Failed to download file", http.StatusInternalServerError)
+					return
+				}
+				if _, err := io.Copy(zip, file); err != nil {
+					if err != nil {
+						log.Println(err)
+						http.Error(w, "Failed to download file", http.StatusInternalServerError)
+						return
+					}
+				}
+
+			}
+
+			zipWriter.Close()
+
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(archivePath)))
+			w.Header().Set("Content-Type", "application/octet-stream")
+
+			h.logCh <- models.ServerLog{
+				Message: fmt.Sprintf("Downloading %v", archivePath),
+				Type:    models.API_LOG,
+			}
+
+			http.ServeFile(w, r, archivePath)
+
+		} else {
+			file := filepath.Join(h.dir, query["file"][0])
+
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(file)))
+			w.Header().Set("Content-Type", "application/octet-stream")
+
+			h.logCh <- models.ServerLog{
+				Message: fmt.Sprintf("Downloading %v", file),
+				Type:    models.API_LOG,
+			}
+
+			http.ServeFile(w, r, file)
 		}
 
-		http.ServeFile(w, r, file)
 		return
 	}
 
