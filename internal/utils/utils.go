@@ -12,8 +12,11 @@ func GetSNetTDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	path := filepath.Join(userDir, ".snett")
 
-	return filepath.Join(userDir, ".snett"), nil
+	os.MkdirAll(path, 0777)
+
+	return path, nil
 }
 
 func GetLocalIp() ([]string, error) {
