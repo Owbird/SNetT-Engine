@@ -10,7 +10,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "SNetT-Engine",
 	Short: "SNetT Cli",
-	Long:  `SNetT Cli`,
+	Long:  `SNetT is a collection of network tools for easy file sharing and management.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

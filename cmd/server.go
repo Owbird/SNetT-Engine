@@ -20,13 +20,13 @@ var (
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Manage file server",
-	Long:  `Manage file server`,
+	Long:  `Run the File server with options such as allowing uploads, making it available via the internet, etc.`,
 }
 
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the server",
-	Long:  `Start the server`,
+	Long:  `Start the server the server`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, err := cmd.Flags().GetString("dir")
 		if err != nil {

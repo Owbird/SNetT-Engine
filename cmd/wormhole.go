@@ -11,13 +11,13 @@ import (
 var wormholeCmd = &cobra.Command{
 	Use:   "wormhole",
 	Short: "Manage files via a wormhole",
-	Long:  "Manage files via a wormhole",
+	Long:  `Share and receive files via a wormhole.`,
 }
 
 var sendCmd = &cobra.Command{
 	Use:   "share",
 	Short: "Share file to device via the wormhole",
-	Long:  `Share file to device via the wormhole`,
+	Long:  `Send a file through the wormhole to another device using the magic key.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		svr := wormhole.NewWormhole(nil)
 		file, err := cmd.Flags().GetString("file")
@@ -45,7 +45,7 @@ var sendCmd = &cobra.Command{
 var RecvCommand = &cobra.Command{
 	Use:   "receive",
 	Short: "Receive file from device via the wormhole",
-	Long:  `Receive file from device via the wormhole`,
+	Long:  `Receive a file using the magic key from another device through the wormhole.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		server := wormhole.NewWormhole(nil)
 		code, err := cmd.Flags().GetString("code")
