@@ -3,6 +3,7 @@
 package handlers
 
 import (
+	"archive/zip"
 	"fmt"
 	"html/template"
 	"io"
@@ -13,8 +14,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"archive/zip"
 
 	"github.com/Owbird/SNetT-Engine/internal/config"
 	"github.com/Owbird/SNetT-Engine/internal/utils"
@@ -236,15 +235,18 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			file := filepath.Join(h.dir, query["file"][0])
 
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(file)))
-			w.Header().Set("Content-Type", "application/octet-stream")
-
 			h.logCh <- models.ServerLog{
-				Message: fmt.Sprintf("Downloading %v", file),
+				Message: fmt.Sprintf("Viewing %v", file),
 				Type:    models.API_LOG,
 			}
 
+			if !query.Has("view") || query["view"][0] != "1" {
+				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(file)))
+			}
+
 			http.ServeFile(w, r, file)
+			return
+
 		}
 
 		return

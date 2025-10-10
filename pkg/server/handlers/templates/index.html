@@ -68,7 +68,7 @@
           </td>
           <td class="file-name-cell">
             <a
-              href="{{ if .IsDir}} ?dir={{$.CurrentPath}}/{{.Name}} {{else}} # {{end}}"
+              href="{{ if .IsDir}} ?dir={{$.CurrentPath}}/{{.Name}} {{else}} /download?file={{$.CurrentPath}}/{{.Name}}&view=1 {{end}}"
               class="file-link"
             >
               <i
@@ -80,14 +80,17 @@
           <td>{{ .Size }}</td>
           <td>{{ if .IsDir }}Directory{{ else }}File{{ end }}</td>
           <td>
-            {{ if not .IsDir }}
-            <a
-              href="/download?file={{$.CurrentPath}}/{{.Name}}"
-              class="download-link"
-            >
-              Download
-            </a>
-            {{ end }}
+            <div>
+              {{ if not .IsDir }}
+              <a
+                href="/download?file={{$.CurrentPath}}/{{.Name}}"
+                class="download-link"
+                download
+              >
+               Download 
+              </a>
+              {{ end }}
+            </div>
           </td>
         </tr>
         {{ end }}
