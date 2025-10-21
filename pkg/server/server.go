@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/Owbird/SNetT-Engine/pkg/server/handlers"
+	"github.com/grandcat/zeroconf"
 	"github.com/localtunnel/go-localtunnel"
 	"github.com/rs/cors"
 )
@@ -52,6 +56,15 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		hosts = append(hosts, "localhost")
 	}
 
+	server, err := zeroconf.Register(tempConfig.GetSeverConfig().GetName(), "_snett._tcp", "local.", 42424, []string{}, nil)
+	if err != nil {
+		s.logCh <- models.ServerLog{
+			Error: err,
+			Type:  models.SERVE_WEB_UI_NETWORK,
+		}
+		return
+	}
+
 	for _, host := range hosts {
 		s.logCh <- models.ServerLog{
 			Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(port)),
@@ -83,39 +96,51 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		})()
 	}
 
-	mux := http.NewServeMux()
+	go func() {
+		mux := http.NewServeMux()
 
-	handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
+		handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
 
-	mux.HandleFunc("/", handlerFuncs.GetFilesHandler)
-	mux.HandleFunc("/download", handlerFuncs.DownloadFileHandler)
-	mux.HandleFunc("/upload", handlerFuncs.GetFileUpload)
-	mux.HandleFunc("GET /assets/{file}", handlerFuncs.GetAssets)
+		mux.HandleFunc("/", handlerFuncs.GetFilesHandler)
+		mux.HandleFunc("/download", handlerFuncs.DownloadFileHandler)
+		mux.HandleFunc("/upload", handlerFuncs.GetFileUpload)
+		mux.HandleFunc("GET /assets/{file}", handlerFuncs.GetAssets)
 
-	corsOpts := cors.New(cors.Options{
-		AllowedOrigins: []string{"https://*.loca.lt"},
-		AllowedMethods: []string{
-			http.MethodGet,
-			http.MethodOptions,
-			http.MethodHead,
-		},
+		corsOpts := cors.New(cors.Options{
+			AllowedOrigins: []string{"https://*.loca.lt"},
+			AllowedMethods: []string{
+				http.MethodGet,
+				http.MethodOptions,
+				http.MethodHead,
+			},
 
-		AllowedHeaders: []string{
-			"*",
-		},
-	})
+			AllowedHeaders: []string{
+				"*",
+			},
+		})
 
-	s.logCh <- models.ServerLog{
-		Message: fmt.Sprintf("Starting API on port %v from %v", port, s.Dir),
-		Type:    models.API_LOG,
-	}
-
-	err = http.ListenAndServe(fmt.Sprintf(":%v", port), corsOpts.Handler(mux))
-	if err != nil {
 		s.logCh <- models.ServerLog{
-			Error: err,
-			Type:  models.API_LOG,
+			Message: fmt.Sprintf("Starting API on port %v from %v", port, s.Dir),
+			Type:    models.API_LOG,
 		}
-		log.Fatalln(err)
-	}
+
+		err = http.ListenAndServe(fmt.Sprintf(":%v", port), corsOpts.Handler(mux))
+		if err != nil {
+			s.logCh <- models.ServerLog{
+				Error: err,
+				Type:  models.API_LOG,
+			}
+			log.Fatalln(err)
+		}
+	}()
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	<-sig
+
+	log.Println("Shutting down...")
+
+	server.Shutdown()
+
+	os.Exit(0)
 }
