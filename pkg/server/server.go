@@ -40,7 +40,10 @@ const MdnsServiceName = "_snett._tcp"
 
 // Starts starts and serves the specified dir
 func (s *Server) Start(tempConfig config.AppConfig) {
-	port := tempConfig.GetSeverConfig().GetPort()
+	serverConfig := tempConfig.GetSeverConfig()
+	notifConfig := tempConfig.GetNotifConfig()
+
+	port := serverConfig.GetPort()
 
 	s.logCh <- models.ServerLog{
 		Message: "Starting server",
@@ -60,7 +63,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		hosts = append(hosts, "localhost")
 	}
 
-	server, err := zeroconf.Register(tempConfig.GetSeverConfig().GetName(), MdnsServiceName, "local.", port, []string{}, nil)
+	server, err := zeroconf.Register(serverConfig.GetName(), MdnsServiceName, "local.", port, []string{}, nil)
 	if err != nil {
 		s.logCh <- models.ServerLog{
 			Error: err,
@@ -76,7 +79,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		}
 	}
 
-	if tempConfig.GetSeverConfig().GetAllowOnline() {
+	if serverConfig.GetAllowOnline() {
 		go (func() {
 			tunnel, err := localtunnel.New(port, "localhost", localtunnel.Options{})
 			if err != nil {
@@ -87,7 +90,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 				return
 			}
 
-			tempConfig.GetNotifConfig().SendNotification(models.Notification{
+			notifConfig.SendNotification(models.Notification{
 				Title:         "Web Server Ready",
 				Body:          "URL copied to clipboard",
 				ClipboardText: tunnel.URL(),
