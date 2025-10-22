@@ -60,7 +60,12 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	}
 
 	if len(hosts) == 0 {
-		hosts = append(hosts, "localhost")
+		s.logCh <- models.ServerLog{
+			Error: fmt.Errorf("No network detected"),
+			Type:  models.SERVE_WEB_UI_NETWORK,
+		}
+		return
+
 	}
 
 	server, err := zeroconf.Register(serverConfig.GetName(), MdnsServiceName, "local.", port, []string{}, nil)
