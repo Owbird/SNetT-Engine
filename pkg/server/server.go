@@ -2,6 +2,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
@@ -34,6 +36,8 @@ func NewServer(dir string, logCh chan models.ServerLog) *Server {
 	}
 }
 
+const MdnsServiceName = "_snett._tcp"
+
 // Starts starts and serves the specified dir
 func (s *Server) Start(tempConfig config.AppConfig) {
 	port := tempConfig.GetSeverConfig().GetPort()
@@ -56,7 +60,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		hosts = append(hosts, "localhost")
 	}
 
-	server, err := zeroconf.Register(tempConfig.GetSeverConfig().GetName(), "_snett._tcp", "local.", 42424, []string{}, nil)
+	server, err := zeroconf.Register(tempConfig.GetSeverConfig().GetName(), MdnsServiceName, "local.", port, []string{}, nil)
 	if err != nil {
 		s.logCh <- models.ServerLog{
 			Error: err,
@@ -143,4 +147,36 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	server.Shutdown()
 
 	os.Exit(0)
+}
+
+// List shows the broadcasted servers on the network
+func (s *Server) List(servers chan<- models.SNetTServer) {
+	log.Println("Scanning...")
+	resolver, err := zeroconf.NewResolver(nil)
+	if err != nil {
+		log.Fatalln("Failed to initialize resolver:", err.Error())
+	}
+	defer close(servers)
+
+	entries := make(chan *zeroconf.ServiceEntry)
+	go func(results <-chan *zeroconf.ServiceEntry) {
+		for entry := range results {
+			server := models.SNetTServer{
+				Name: entry.Instance,
+				Port: entry.Port,
+				IP:   entry.AddrIPv4[0].String(),
+			}
+			servers <- server
+		}
+	}(entries)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	err = resolver.Browse(ctx, MdnsServiceName, "local.", entries)
+	if err != nil {
+		log.Fatalln("Failed to browse:", err.Error())
+	}
+
+	<-ctx.Done()
 }

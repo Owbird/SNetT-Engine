@@ -2,9 +2,9 @@ package models
 
 const (
 	// File Server Log Types
-	API_LOG               = "api_log"
-	SERVE_WEB_UI_NETWORK    = "serve_web_ui_network"
-	SERVE_WEB_UI_REMOTE   = "serve_web_ui_remote"
+	API_LOG              = "api_log"
+	SERVE_WEB_UI_NETWORK = "serve_web_ui_network"
+	SERVE_WEB_UI_REMOTE  = "serve_web_ui_remote"
 )
 
 type Notification struct {
@@ -34,4 +34,10 @@ type FileShareProgress struct {
 	Bytes      int64
 	Total      int64
 	Percentage int
+}
+
+type SNetTServer struct {
+	Name string
+	Port int
+	IP   string
 }

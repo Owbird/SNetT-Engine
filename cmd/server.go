@@ -114,10 +114,29 @@ var startCmd = &cobra.Command{
 	},
 }
 
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List available servers on the network",
+	Long:  `List reveals the broadcasted servers on the network for easy access`,
+	Run: func(cmd *cobra.Command, args []string) {
+		server := server.NewServer("", nil)
+		servers := make(chan models.SNetTServer)
+
+		go server.List(servers)
+
+		idx := 1
+		for s := range servers {
+			log.Printf("[%v] (%v)  http://%v:%v", idx, s.Name, s.IP, s.Port)
+			idx++
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.AddCommand(startCmd)
+	serverCmd.AddCommand(listCmd)
 
 	startCmd.Flags().StringP("dir", "d", "", "Directory to serve")
 	startCmd.Flags().StringP("name", "n", serverConfig.GetName(), "Directory to serve")
