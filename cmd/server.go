@@ -44,29 +44,29 @@ var startCmd = &cobra.Command{
 			for l := range logCh {
 				switch l.Type {
 				case models.API_LOG:
-					if l.Error != nil {
-						log.Printf("[!] API Error: %v", l.Error)
+					if l.Type == models.SERVER_ERROR {
+						log.Printf("[!] API Error: %v", l.Value)
 					} else {
-						log.Printf("[+] API Log: %v", l.Message)
+						log.Printf("[+] API Log: %v", l.Value)
 					}
-				case models.SERVE_WEB_UI_NETWORK:
-					if l.Error != nil {
-						log.Printf("[!] Network Web Run Error: %v", l.Error)
+				case models.SERVE_UI_LOCAL:
+					if l.Type == models.SERVER_ERROR {
+						log.Printf("[!] Network Web Run Error: %v", l.Value)
 					} else {
-						log.Printf("[+] Network Web Running: %v", l.Message)
+						log.Printf("[+] Network Web Running: %v", l.Value)
 					}
-				case models.SERVE_WEB_UI_REMOTE:
-					if l.Error != nil {
-						log.Printf("[!] Remote Web Run Error: %v", l.Error)
+				case models.SERVE_UI_REMOTE:
+					if l.Type == models.SERVER_ERROR {
+						log.Printf("[!] Remote Web Run Error: %v", l.Value)
 					} else {
-						log.Printf("[+] Remote Web Running: %v", l.Message)
+						log.Printf("[+] Remote Web Running: %v", l.Value)
 					}
 
 				default:
-					if l.Error != nil {
-						log.Printf("[!] Server Error: %v", l.Error)
+					if l.Type == models.SERVER_ERROR {
+						log.Printf("[!] Server Error: %v", l.Value)
 					} else {
-						log.Printf("[+] Server Log: %v", l.Message)
+						log.Printf("[+] Server Log: %v", l.Value)
 					}
 				}
 			}

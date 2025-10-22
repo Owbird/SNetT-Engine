@@ -89,7 +89,7 @@ func NewHandlers(
 
 func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 	h.logCh <- models.ServerLog{
-		Message: "Receiving files",
+		Value: "Receiving files",
 		Type:    models.API_LOG,
 	}
 	reader, err := r.MultipartReader()
@@ -153,7 +153,7 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.logCh <- models.ServerLog{
-			Message: fmt.Sprintf("File received at %v", filePath),
+			Value: fmt.Sprintf("File received at %v", filePath),
 			Type:    models.API_LOG,
 		}
 	}
@@ -226,7 +226,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/octet-stream")
 
 			h.logCh <- models.ServerLog{
-				Message: fmt.Sprintf("Downloading %v", archivePath),
+				Value: fmt.Sprintf("Downloading %v", archivePath),
 				Type:    models.API_LOG,
 			}
 
@@ -236,7 +236,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 			file := filepath.Join(h.dir, query["file"][0])
 
 			h.logCh <- models.ServerLog{
-				Message: fmt.Sprintf("Viewing %v", file),
+				Value: fmt.Sprintf("Viewing %v", file),
 				Type:    models.API_LOG,
 			}
 
@@ -281,7 +281,7 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logCh <- models.ServerLog{
-		Message: fmt.Sprintf("Getting files for %v", fullPath),
+		Value: fmt.Sprintf("Getting files for %v", fullPath),
 		Type:    models.API_LOG,
 	}
 

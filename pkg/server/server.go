@@ -46,23 +46,23 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	port := serverConfig.GetPort()
 
 	s.logCh <- models.ServerLog{
-		Message: "Starting server",
-		Type:    models.API_LOG,
+		Value: "Starting server",
+		Type:  models.API_LOG,
 	}
 
 	hosts, err := utils.GetLocalIp()
 	if err != nil {
 		s.logCh <- models.ServerLog{
-			Error: err,
-			Type:  models.SERVE_WEB_UI_NETWORK,
+			Value: err.Error(),
+			Type:  models.SERVER_ERROR,
 		}
 		return
 	}
 
 	if len(hosts) == 0 {
 		s.logCh <- models.ServerLog{
-			Error: fmt.Errorf("No network detected"),
-			Type:  models.SERVE_WEB_UI_NETWORK,
+			Value: "No network detected",
+			Type:  models.SERVER_ERROR,
 		}
 		return
 
@@ -71,16 +71,16 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	server, err := zeroconf.Register(serverConfig.GetName(), MdnsServiceName, "local.", port, []string{}, nil)
 	if err != nil {
 		s.logCh <- models.ServerLog{
-			Error: err,
-			Type:  models.SERVE_WEB_UI_NETWORK,
+			Value: err.Error(),
+			Type:  models.SERVER_ERROR,
 		}
 		return
 	}
 
 	for _, host := range hosts {
 		s.logCh <- models.ServerLog{
-			Message: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(port)),
-			Type:    models.SERVE_WEB_UI_NETWORK,
+			Value: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(port)),
+			Type:  models.SERVE_UI_LOCAL,
 		}
 	}
 
@@ -89,8 +89,8 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 			tunnel, err := localtunnel.New(port, "localhost", localtunnel.Options{})
 			if err != nil {
 				s.logCh <- models.ServerLog{
-					Error: err,
-					Type:  models.SERVE_WEB_UI_REMOTE,
+					Value: err.Error(),
+					Type:  models.SERVE_UI_REMOTE,
 				}
 				return
 			}
@@ -102,8 +102,8 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 			})
 
 			s.logCh <- models.ServerLog{
-				Message: tunnel.URL(),
-				Type:    models.SERVE_WEB_UI_REMOTE,
+				Value: tunnel.URL(),
+				Type:  models.SERVE_UI_REMOTE,
 			}
 		})()
 	}
@@ -132,15 +132,15 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		})
 
 		s.logCh <- models.ServerLog{
-			Message: fmt.Sprintf("Starting API on port %v from %v", port, s.Dir),
-			Type:    models.API_LOG,
+			Value: fmt.Sprintf("Starting API from %v", s.Dir),
+			Type:  models.API_LOG,
 		}
 
 		err = http.ListenAndServe(fmt.Sprintf(":%v", port), corsOpts.Handler(mux))
 		if err != nil {
 			s.logCh <- models.ServerLog{
-				Error: err,
-				Type:  models.API_LOG,
+				Value: err.Error(),
+				Type:  models.SERVER_ERROR,
 			}
 			log.Fatalln(err)
 		}
@@ -150,9 +150,12 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 	<-sig
 
-	log.Println("Shutting down...")
-
 	server.Shutdown()
+
+	s.logCh <- models.ServerLog{
+		Value: "Shutting down",
+		Type:  models.API_LOG,
+	}
 
 	os.Exit(0)
 }

@@ -1,10 +1,13 @@
 package models
 
+type LogType string
+
 const (
 	// File Server Log Types
-	API_LOG              = "api_log"
-	SERVE_WEB_UI_NETWORK = "serve_web_ui_network"
-	SERVE_WEB_UI_REMOTE  = "serve_web_ui_remote"
+	API_LOG         LogType = "api_log"
+	SERVE_UI_LOCAL  LogType = "serve_web_ui_network"
+	SERVE_UI_REMOTE LogType = "serve_web_ui_remote"
+	SERVER_ERROR    LogType = "server_error"
 )
 
 type Notification struct {
@@ -20,14 +23,10 @@ type Notification struct {
 
 type ServerLog struct {
 	// Type of log from the file server.
-	// [api_log]: Log for the API
-	// [serve_web_ui_local]: Contains local url
-	// [serve_web_ui_remote]: Contains remote link
-	Type string
+	Type LogType
 
-	Message string
-
-	Error error
+	// Value of the log
+	Value string
 }
 
 type FileShareProgress struct {
