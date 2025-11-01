@@ -41,7 +41,7 @@ func NewAppConfig() *AppConfig {
 	viper.SetDefault("server.name", fmt.Sprintf("%v's Server", hostname))
 	viper.SetDefault("server.allowUploads", false)
 	viper.SetDefault("server.allowOnline", false)
-	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.port", 9091)
 	viper.SetDefault("notification.allowNotif", false)
 
 	err = viper.ReadInConfig()
