@@ -58,25 +58,25 @@ var startCmd = &cobra.Command{
 		serverName, _ := cmd.Flags().GetString("name")
 
 		if cmd.Flags().Changed("uploads") {
-			serverConfig.SetAllowUploads(true)
+			serverConfig.AllowUploads = true
 		} else if cmd.Flags().Changed("no-uploads") {
-			serverConfig.SetAllowUploads(false)
+			serverConfig.AllowUploads = false
 		}
 
 		if cmd.Flags().Changed("online") {
-			serverConfig.SetAllowOnline(true)
+			serverConfig.AllowOnline = true
 		} else if cmd.Flags().Changed("no-online") {
-			serverConfig.SetAllowOnline(false)
+			serverConfig.AllowOnline = false
 		}
 
 		if cmd.Flags().Changed("notify") {
-			notifConfig.SetAllowNotif(true)
+			notifConfig.AllowNotif = true
 		} else if cmd.Flags().Changed("no-notify") {
-			notifConfig.SetAllowNotif(false)
+			notifConfig.AllowNotif = false
 		}
 
-		serverConfig.SetPort(port)
-		serverConfig.SetName(serverName)
+		serverConfig.Port = port
+		serverConfig.Name = serverName
 
 		wg := sync.WaitGroup{}
 
@@ -111,15 +111,15 @@ func init() {
 	serverCmd.AddCommand(listCmd)
 
 	startCmd.Flags().StringP("dir", "d", "", "Directory to serve")
-	startCmd.Flags().StringP("name", "n", serverConfig.GetName(), "Server name")
-	startCmd.Flags().IntP("port", "p", serverConfig.GetPort(), "Port to host on")
+	startCmd.Flags().StringP("name", "n", serverConfig.Name, "Server name")
+	startCmd.Flags().IntP("port", "p", serverConfig.Port, "Port to host on")
 
-	startCmd.Flags().Bool("uploads", serverConfig.GetAllowUploads(), "Allow uploads to directory")
-	startCmd.Flags().Bool("no-uploads", !serverConfig.GetAllowUploads(), "Do not allow uploads to directory")
-	startCmd.Flags().Bool("online", serverConfig.GetAllowOnline(), "Allow online access to server")
-	startCmd.Flags().Bool("no-online", !serverConfig.GetAllowOnline(), "Do not allow online access to server")
-	startCmd.Flags().Bool("notify", notifConfig.GetAllowNotif(), "Allow notifications")
-	startCmd.Flags().Bool("no-notify", !notifConfig.GetAllowNotif(), "Do not allow notifications")
+	startCmd.Flags().Bool("uploads", serverConfig.AllowUploads, "Allow uploads to directory")
+	startCmd.Flags().Bool("no-uploads", !serverConfig.AllowUploads, "Do not allow uploads to directory")
+	startCmd.Flags().Bool("online", serverConfig.AllowOnline, "Allow online access to server")
+	startCmd.Flags().Bool("no-online", !serverConfig.AllowOnline, "Do not allow online access to server")
+	startCmd.Flags().Bool("notify", notifConfig.AllowNotif, "Allow notifications")
+	startCmd.Flags().Bool("no-notify", !notifConfig.AllowNotif, "Do not allow notifications")
 
 	startCmd.MarkFlagsMutuallyExclusive("uploads", "no-uploads")
 	startCmd.MarkFlagsMutuallyExclusive("online", "no-online")

@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Owbird/SNetT-Engine/internal/config"
 	"github.com/Owbird/SNetT-Engine/internal/utils"
+	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 )
 
@@ -90,7 +90,7 @@ func NewHandlers(
 func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 	h.logCh <- models.ServerLog{
 		Value: "Receiving files",
-		Type:    models.API_LOG,
+		Type:  models.API_LOG,
 	}
 	reader, err := r.MultipartReader()
 	if err != nil {
@@ -154,7 +154,7 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 
 		h.logCh <- models.ServerLog{
 			Value: fmt.Sprintf("File received at %v", filePath),
-			Type:    models.API_LOG,
+			Type:  models.API_LOG,
 		}
 	}
 }
@@ -211,11 +211,9 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				if _, err := io.Copy(zip, file); err != nil {
-					if err != nil {
-						log.Println(err)
-						http.Error(w, "Failed to download file", http.StatusInternalServerError)
-						return
-					}
+					log.Println(err)
+					http.Error(w, "Failed to download file", http.StatusInternalServerError)
+					return
 				}
 
 			}
@@ -227,7 +225,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 			h.logCh <- models.ServerLog{
 				Value: fmt.Sprintf("Downloading %v", archivePath),
-				Type:    models.API_LOG,
+				Type:  models.API_LOG,
 			}
 
 			http.ServeFile(w, r, archivePath)
@@ -237,7 +235,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 			h.logCh <- models.ServerLog{
 				Value: fmt.Sprintf("Viewing %v", file),
-				Type:    models.API_LOG,
+				Type:  models.API_LOG,
 			}
 
 			if !query.Has("view") || query["view"][0] != "1" {
@@ -253,7 +251,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "Failed to download file", http.StatusBadRequest)
-	return
+
 }
 
 func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
@@ -282,7 +280,7 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.logCh <- models.ServerLog{
 		Value: fmt.Sprintf("Getting files for %v", fullPath),
-		Type:    models.API_LOG,
+		Type:  models.API_LOG,
 	}
 
 	dirFiles, err := os.ReadDir(fullPath)
@@ -315,8 +313,8 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		Files:       files,
 		CurrentPath: currentPath,
 		ServerConfig: IndexHTMLConfig{
-			Name:         h.serverConfig.GetName(),
-			AllowUploads: h.serverConfig.GetAllowUploads(),
+			Name:         h.serverConfig.Name,
+			AllowUploads: h.serverConfig.AllowUploads,
 		},
 	})
 }

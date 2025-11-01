@@ -43,7 +43,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	serverConfig := tempConfig.GetSeverConfig()
 	notifConfig := tempConfig.GetNotifConfig()
 
-	port := serverConfig.GetPort()
+	port := serverConfig.Port
 
 	s.logCh <- models.ServerLog{
 		Value: "Starting server",
@@ -68,7 +68,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 
 	}
 
-	server, err := zeroconf.Register(serverConfig.GetName(), MdnsServiceName, "local.", port, []string{}, nil)
+	server, err := zeroconf.Register(serverConfig.Name, MdnsServiceName, "local.", port, []string{}, nil)
 	if err != nil {
 		s.logCh <- models.ServerLog{
 			Value: err.Error(),
@@ -84,7 +84,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		}
 	}
 
-	if serverConfig.GetAllowOnline() {
+	if serverConfig.AllowOnline {
 		go (func() {
 			tunnel, err := localtunnel.New(port, "localhost", localtunnel.Options{})
 			if err != nil {
