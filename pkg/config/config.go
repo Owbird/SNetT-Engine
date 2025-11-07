@@ -51,7 +51,7 @@ func NewAppConfig() *AppConfig {
 		log.Fatalln("Failed to get user dir")
 	}
 
-	viper.SetConfigName("snet")
+	viper.SetConfigName("snett")
 	viper.SetConfigType("toml")
 
 	viper.AddConfigPath(userDir)
