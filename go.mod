@@ -4,6 +4,9 @@ go 1.22.1
 
 require (
 	github.com/atotto/clipboard v0.1.4
+	github.com/google/uuid v1.4.0
+	github.com/gorilla/websocket v1.5.0
+	github.com/grandcat/zeroconf v1.0.0
 	github.com/localtunnel/go-localtunnel v0.0.0-20170326223115-8a804488f275
 	github.com/psanford/wormhole-william v1.0.7
 	github.com/rs/cors v1.11.0
@@ -14,7 +17,6 @@ require (
 require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/deckarep/gosx-notifier v0.0.0-20180201035817-e127226297fb // indirect
-	github.com/grandcat/zeroconf v1.0.0 // indirect
 	github.com/miekg/dns v1.1.27 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	golang.org/x/net v0.23.0 // indirect

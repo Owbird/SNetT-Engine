@@ -16,6 +16,7 @@ import (
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/Owbird/SNetT-Engine/pkg/server/handlers"
+	"github.com/gorilla/websocket"
 	"github.com/grandcat/zeroconf"
 	"github.com/localtunnel/go-localtunnel"
 	"github.com/rs/cors"
@@ -109,11 +110,16 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	}
 
 	go func() {
+		upgrader := websocket.Upgrader{}
+
 		mux := http.NewServeMux()
 
 		handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
 
 		mux.HandleFunc("/", handlerFuncs.GetFilesHandler)
+		mux.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
+			handlerFuncs.HandleConnect(&upgrader, w, r)
+		})
 		mux.HandleFunc("/download", handlerFuncs.DownloadFileHandler)
 		mux.HandleFunc("/upload", handlerFuncs.GetFileUpload)
 		mux.HandleFunc("GET /assets/{file}", handlerFuncs.GetAssets)

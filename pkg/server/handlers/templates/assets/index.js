@@ -31,6 +31,25 @@ const cookBreadCrumbs = (path, container) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  const { host } = window.location;
+
+  const wsUrl = new URL("/connect", `ws://${host}`);
+
+  ws = new WebSocket(wsUrl);
+  ws.onopen = function (evt) {
+    ws.send(`CONNECT: ${window.uid}`);
+  };
+  ws.onclose = function (evt) {
+    alert("CLOSE");
+    ws = null;
+  };
+  ws.onmessage = function (evt) {
+    alert("RESPONSE: " + evt.data);
+  };
+  ws.onerror = function (evt) {
+    alert("ERROR: " + evt.data);
+  };
+
   const dropArea = document.getElementById("drop-area");
   const fileInput = document.getElementById("file-upload");
   const uploadButton = document.getElementById("upload-button");
@@ -152,9 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (selectAllCheckbox && fileCheckboxes.length > 0 && downloadSelectedBtn) {
     const updateDownloadButton = () => {
-      const selectedFiles = document.querySelectorAll(
-        ".file-checkbox:checked",
-      );
+      const selectedFiles = document.querySelectorAll(".file-checkbox:checked");
       if (selectedFiles.length > 0) {
         downloadSelectedBtn.classList.remove("hidden");
         downloadSelectedBtn.innerText = `Download ${selectedFiles.length} file(s)`;
@@ -198,15 +215,12 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-
-
       if (selectedFiles.length > 0) {
-
         const link = document.createElement("a");
-          link.href = `/download?file=${encodeURIComponent(selectedFiles.join(","))}`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+        link.href = `/download?file=${encodeURIComponent(selectedFiles.join(","))}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     });
   }

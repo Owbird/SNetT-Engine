@@ -18,11 +18,18 @@ import (
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
+
+type Visitor struct {
+	uid string
+}
 
 type Handlers struct {
 	logCh        chan models.ServerLog
 	dir          string
+	vistors      []Visitor
 	serverConfig *config.ServerConfig
 	notifConfig  *config.NotifConfig
 }
@@ -48,6 +55,7 @@ type IndexHTMLConfig struct {
 type IndexHTML struct {
 	Files        []File
 	CurrentPath  string
+	Uid          string
 	ServerConfig IndexHTMLConfig
 }
 
@@ -251,7 +259,6 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "Failed to download file", http.StatusBadRequest)
-
 }
 
 func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
@@ -309,9 +316,14 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		files = append(files, fmtedFile)
 	}
 
+	uid := uuid.NewString()
+
+	log.Println(uid)
+
 	tmpl.ExecuteTemplate(w, "index.html", IndexHTML{
 		Files:       files,
 		CurrentPath: currentPath,
+		Uid:         uid,
 		ServerConfig: IndexHTMLConfig{
 			Name:         h.serverConfig.Name,
 			AllowUploads: h.serverConfig.AllowUploads,
@@ -337,5 +349,46 @@ func (h *Handlers) GetAssets(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(data)
 	if err != nil {
 		fmt.Print(err)
+	}
+}
+
+func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r *http.Request) {
+	c, err := u.Upgrade(w, r, nil)
+	if err != nil {
+		http.Error(w, "Failed to connect to server", http.StatusInternalServerError)
+		return
+	}
+	defer c.Close()
+	for {
+		mt, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			if err != nil {
+				http.Error(w, "Failed to connect to server", http.StatusInternalServerError)
+				return
+			}
+
+		}
+		log.Printf("recv: %s", message)
+
+		if strings.Contains(string(message), "CONNECT:") {
+			uid := strings.Split(string(message), ": ")[1]
+			h.vistors = append(h.vistors, Visitor{
+				uid: uid,
+			})
+
+			log.Println(uid, h.vistors)
+
+			err = c.WriteMessage(mt, []byte("CONNECTION SUCCESFUL"))
+			if err != nil {
+				log.Println("write:", err)
+				if err != nil {
+					http.Error(w, "Failed to connect to server", http.StatusInternalServerError)
+					return
+				}
+			}
+
+		}
+
 	}
 }

@@ -87,7 +87,7 @@
                 class="download-link"
                 download
               >
-               Download 
+                Download
               </a>
               {{ end }}
             </div>
@@ -96,6 +96,12 @@
         {{ end }}
       </tbody>
     </table>
+
+    <h1>Uid: {{ .Uid }}</h1>
+
+    <script>
+      window.uid = "{{ .Uid }}";
+    </script>
 
     <script src="/assets/index.js"></script>
   </body>
