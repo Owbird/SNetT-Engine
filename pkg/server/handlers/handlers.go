@@ -363,11 +363,6 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
-			if err != nil {
-				http.Error(w, "Failed to connect to server", http.StatusInternalServerError)
-				return
-			}
-
 		}
 		log.Printf("recv: %s", message)
 
@@ -382,13 +377,7 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 			err = c.WriteMessage(mt, []byte("CONNECTION SUCCESFUL"))
 			if err != nil {
 				log.Println("write:", err)
-				if err != nil {
-					http.Error(w, "Failed to connect to server", http.StatusInternalServerError)
-					return
-				}
 			}
-
 		}
-
 	}
 }
