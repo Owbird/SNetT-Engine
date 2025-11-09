@@ -44,6 +44,8 @@ var startCmd = &cobra.Command{
 					log.Printf("[+] Network Web Running: %v", l.Value)
 				case models.SERVE_UI_REMOTE:
 					log.Printf("[+] Remote Web Running: %v", l.Value)
+				case models.WS_NEW_VISITOR:
+					log.Printf("[+] New visitor: %v", l.Value)
 				case models.SERVER_ERROR:
 					log.Printf("[!] Server Error: %v", l.Value)
 				default:

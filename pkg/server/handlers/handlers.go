@@ -372,8 +372,10 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 				uid: uid,
 			})
 
-			log.Println(uid, h.vistors)
-
+			h.logCh <- models.ServerLog{
+				Value: uid,
+				Type:  models.WS_NEW_VISITOR,
+			}
 			err = c.WriteMessage(mt, []byte("CONNECTION SUCCESFUL"))
 			if err != nil {
 				log.Println("write:", err)

@@ -8,6 +8,7 @@ const (
 	SERVE_UI_LOCAL  LogType = "serve_web_ui_network"
 	SERVE_UI_REMOTE LogType = "serve_web_ui_remote"
 	SERVER_ERROR    LogType = "server_error"
+	WS_NEW_VISITOR  LogType = "new_visitor"
 )
 
 type Notification struct {
