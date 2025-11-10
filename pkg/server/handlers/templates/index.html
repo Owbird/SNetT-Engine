@@ -65,7 +65,7 @@
           </td>
           <td class="file-name-cell">
             <a
-              href="{{ if .IsDir}} ?dir={{$.CurrentPath}}/{{.Name}} {{else}} /download?file={{$.CurrentPath}}/{{.Name}}&view=1 {{end}}"
+              href="{{ if .IsDir}} ?dir={{$.CurrentPath}}/{{.Name}} {{else}} /view?file={{$.CurrentPath}}/{{.Name}} {{end}}"
               class="file-link"
             >
               <i

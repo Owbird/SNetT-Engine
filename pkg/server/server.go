@@ -121,6 +121,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 			handlerFuncs.HandleConnect(&upgrader, w, r)
 		})
 		mux.HandleFunc("/download", handlerFuncs.DownloadFileHandler)
+		mux.HandleFunc("/view", handlerFuncs.ViewFileHandler)
 		mux.HandleFunc("/upload", handlerFuncs.GetFileUpload)
 		mux.HandleFunc("GET /assets/{file}", handlerFuncs.GetAssets)
 

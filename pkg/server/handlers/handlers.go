@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -56,6 +57,14 @@ type IndexHTML struct {
 	Files        []File
 	CurrentPath  string
 	Uid          string
+	ServerConfig IndexHTMLConfig
+}
+
+// ViewHTML defines the data passed to the view.html
+// template file
+type ViewHTML struct {
+	File         string
+	MimeType     string
 	ServerConfig IndexHTMLConfig
 }
 
@@ -167,98 +176,132 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handlers) ViewFileHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	file := query["file"][0]
+
+	if len(file) == 0 {
+		http.Error(w, "Failed to download file", http.StatusBadRequest)
+		return
+	}
+
+	if filepath.Dir(file) == ".." || filepath.Base(file) == ".." {
+		http.Error(w, "Failed to download file", http.StatusInternalServerError)
+		return
+
+	}
+
+	h.logCh <- models.ServerLog{
+		Value: fmt.Sprintf("Viewing %v", file),
+		Type:  models.API_LOG,
+	}
+
+	fileType := filepath.Ext(file)
+
+	mimeType := mime.TypeByExtension(fileType)
+
+	tmpl.ExecuteTemplate(w, "view.html", ViewHTML{
+		File:     file,
+		MimeType: strings.ToLower(strings.Split(mimeType, "/")[0]),
+		ServerConfig: IndexHTMLConfig{
+			Name:         h.serverConfig.Name,
+			AllowUploads: h.serverConfig.AllowUploads,
+		},
+	})
+}
+
 func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 
-	if len(query["file"]) > 0 {
-		if filepath.Dir(query["file"][0]) == ".." || filepath.Base(query["file"][0]) == ".." {
+	if len(query["file"]) == 0 {
+		http.Error(w, "Failed to download file", http.StatusBadRequest)
+		return
+	}
+
+	if filepath.Dir(query["file"][0]) == ".." || filepath.Base(query["file"][0]) == ".." {
+		http.Error(w, "Failed to download file", http.StatusInternalServerError)
+		return
+
+	}
+
+	files := strings.Split(query["file"][0], ",")
+
+	if len(files) > 1 {
+
+		tmpDir, err := os.MkdirTemp("", "snett-*")
+		if err != nil {
+			log.Println(err, "this")
 			http.Error(w, "Failed to download file", http.StatusInternalServerError)
 			return
-
 		}
 
-		files := strings.Split(query["file"][0], ",")
+		archivePath := filepath.Join(tmpDir, fmt.Sprintf("snett-%v.zip", time.Now().UnixNano()), "")
+		archive, err := os.Create(archivePath)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "Failed to download file", http.StatusInternalServerError)
+			return
+		}
+		defer archive.Close()
 
-		if len(files) > 1 {
+		zipWriter := zip.NewWriter(archive)
 
-			tmpDir, err := os.MkdirTemp("", "snett-*")
-			if err != nil {
-				log.Println(err, "this")
-				http.Error(w, "Failed to download file", http.StatusInternalServerError)
-				return
-			}
+		for _, f := range files {
 
-			archivePath := filepath.Join(tmpDir, fmt.Sprintf("snett-%v.zip", time.Now().UnixNano()), "")
-			archive, err := os.Create(archivePath)
+			filePath := filepath.Join(h.dir, f)
+
+			file, err := os.Open(filePath)
 			if err != nil {
 				log.Println(err)
 				http.Error(w, "Failed to download file", http.StatusInternalServerError)
 				return
 			}
-			defer archive.Close()
 
-			zipWriter := zip.NewWriter(archive)
+			defer file.Close()
 
-			for _, f := range files {
-
-				filePath := filepath.Join(h.dir, f)
-
-				file, err := os.Open(filePath)
-				if err != nil {
-					log.Println(err)
-					http.Error(w, "Failed to download file", http.StatusInternalServerError)
-					return
-				}
-
-				defer file.Close()
-
-				zip, err := zipWriter.Create(f)
-				if err != nil {
-					log.Println(err)
-					http.Error(w, "Failed to download file", http.StatusInternalServerError)
-					return
-				}
-				if _, err := io.Copy(zip, file); err != nil {
-					log.Println(err)
-					http.Error(w, "Failed to download file", http.StatusInternalServerError)
-					return
-				}
-
+			zip, err := zipWriter.Create(f)
+			if err != nil {
+				log.Println(err)
+				http.Error(w, "Failed to download file", http.StatusInternalServerError)
+				return
 			}
-
-			zipWriter.Close()
-
-			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(archivePath)))
-			w.Header().Set("Content-Type", "application/octet-stream")
-
-			h.logCh <- models.ServerLog{
-				Value: fmt.Sprintf("Downloading %v", archivePath),
-				Type:  models.API_LOG,
+			if _, err := io.Copy(zip, file); err != nil {
+				log.Println(err)
+				http.Error(w, "Failed to download file", http.StatusInternalServerError)
+				return
 			}
-
-			http.ServeFile(w, r, archivePath)
-
-		} else {
-			file := filepath.Join(h.dir, query["file"][0])
-
-			h.logCh <- models.ServerLog{
-				Value: fmt.Sprintf("Viewing %v", file),
-				Type:  models.API_LOG,
-			}
-
-			if !query.Has("view") || query["view"][0] != "1" {
-				w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(file)))
-			}
-
-			http.ServeFile(w, r, file)
-			return
 
 		}
 
+		zipWriter.Close()
+
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(archivePath)))
+		w.Header().Set("Content-Type", "application/octet-stream")
+
+		h.logCh <- models.ServerLog{
+			Value: fmt.Sprintf("Downloading %v", archivePath),
+			Type:  models.API_LOG,
+		}
+
+		http.ServeFile(w, r, archivePath)
+
+	} else {
+		file := filepath.Join(h.dir, query["file"][0])
+
+		h.logCh <- models.ServerLog{
+			Value: fmt.Sprintf("Downloading %v", file),
+			Type:  models.API_LOG,
+		}
+
+		if !query.Has("view") || query["view"][0] != "1" {
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%v", filepath.Base(file)))
+		}
+
+		http.ServeFile(w, r, file)
+
 		return
 	}
-
-	http.Error(w, "Failed to download file", http.StatusBadRequest)
 }
 
 func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
