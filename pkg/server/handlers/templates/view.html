@@ -7,23 +7,22 @@
   </head>
   <body>
     <div class="content-container">
-        <h1>{{ .ServerConfig.Name }}</h1>
+      <h1>{{ .ServerConfig.Name }}</h1>
 
-        {{ if eq .MimeType "image" }}
-            <h2>Image Preview</h2>
-            <img src="/download?file={{ .File }}&view=1" alt="Image Preview" />
-        {{ else if eq .MimeType "video" }}
-            <h2>Video Preview</h2>
-            <video controls>
-                <source src="/download?file={{ .File }}&view=1" />
-                Your browser does not support the video tag.
-            </video>
-        {{ else }}
-            <p>
-                <strong>MIME Type:</strong> {{ .MimeType }}
-            </p>
-            <a href="/download?file={{ .File }}">Download File</a>
-        {{ end }}
+      <div class="file-details">
+        <h3>File Details</h3>
+        <p><strong>File Name:</strong> {{ .File }}</p>
+        <a href="/download?file={{ .File }}">Download File</a>
+      </div>
+
+      {{ if eq .MimeType "image" }}
+      <img src="/download?file={{ .File }}&view=1" alt="Image Preview" />
+      {{ else if eq .MimeType "video" }}
+      <video controls>
+        <source src="/download?file={{ .File }}&view=1" />
+        Your browser does not support the video tag.
+      </video>
+      {{ end }}
     </div>
-</body>
+  </body>
 </html>
