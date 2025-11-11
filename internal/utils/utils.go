@@ -73,8 +73,11 @@ func StandardizeMimeType(mimeType string) string {
 		return "image"
 	} else if strings.Contains(mimeType, "video") {
 		return "video"
-	} else if strings.Contains(mimeType, "csv") {
-		return "csv"
+	} else if strings.Contains(mimeType, "application") {
+		return strings.ReplaceAll(mimeType, "application/", "")
+	} else if strings.Contains(mimeType, "text") {
+		mType := strings.ReplaceAll(mimeType, "text/", "")
+		return strings.Split(mType, ";")[0]
 	}
 
 	return mimeType

@@ -9,6 +9,13 @@
     <div class="content-container">
       <h1>{{ .ServerConfig.Name }}</h1>
 
+      <p>
+
+        {{ .MimeType }}
+
+
+      </p>
+
       <div class="file-details">
         <h3>File Details</h3>
         <p><strong>File Name:</strong> {{ .File }}</p>
@@ -33,9 +40,10 @@
         <source src="/download?file={{ .File }}&view=1" />
         Your browser does not support the video tag.
       </video>
+      {{ else if eq .MimeType "pdf" }}
+      <embed src="/download?file={{ .File }}&view=1" type="application/pdf" width="100%" height="600px" />
       {{ else if eq .MimeType "csv" }}
       <div class="csv-preview">
-        <h3>CSV Content Preview</h3>
         <div id="csv-table-container" class="csv-table-container">
         </div>
       </div>
