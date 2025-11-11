@@ -10,6 +10,17 @@
     <h1>{{ .ServerConfig.Name }}</h1>
     <nav id="breadcrumbs"></nav>
 
+    <div class="hosts-container">
+      <h2>Hosts</h2>
+      <ul class="hosts-list">
+        {{ range .Hosts }}
+        <li class="host-item">
+          <span class="host-ip">{{ . }}</span>
+        </li>
+        {{ end }}
+      </ul>
+    </div>
+
     {{ if .ServerConfig.AllowUploads }}
     <div class="upload-container">
       <div class="upload-section">

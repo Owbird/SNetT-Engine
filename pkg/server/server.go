@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
@@ -78,11 +77,15 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		return
 	}
 
+	handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
+
 	for _, host := range hosts {
 		s.logCh <- models.ServerLog{
-			Value: fmt.Sprintf("http://%s:%s", host, strconv.Itoa(port)),
+			Value: host,
 			Type:  models.SERVE_UI_LOCAL,
 		}
+
+		handlerFuncs.Hosts = append(handlerFuncs.Hosts, fmt.Sprintf("http://%s:%d", host, port))
 	}
 
 	if serverConfig.AllowOnline {
@@ -102,6 +105,8 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 				ClipboardText: tunnel.URL(),
 			})
 
+			handlerFuncs.Hosts = append(handlerFuncs.Hosts, tunnel.URL())
+
 			s.logCh <- models.ServerLog{
 				Value: tunnel.URL(),
 				Type:  models.SERVE_UI_REMOTE,
@@ -113,8 +118,6 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		upgrader := websocket.Upgrader{}
 
 		mux := http.NewServeMux()
-
-		handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
 
 		mux.HandleFunc("/", handlerFuncs.GetFilesHandler)
 		mux.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {

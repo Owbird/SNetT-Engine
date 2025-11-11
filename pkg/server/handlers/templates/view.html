@@ -13,6 +13,17 @@
         <h3>File Details</h3>
         <p><strong>File Name:</strong> {{ .File }}</p>
         <a href="/download?file={{ .File }}">Download File</a>
+
+        <div class="hosts-container">
+          <h3>Available Hosts</h3>
+          <ul class="hosts-list">
+            {{ range .Hosts }}
+            <li class="host-item">
+              <span class="host-ip">{{ . }}</span>
+            </li>
+            {{ end }}
+          </ul>
+        </div>
       </div>
 
       {{ if eq .MimeType "image" }}

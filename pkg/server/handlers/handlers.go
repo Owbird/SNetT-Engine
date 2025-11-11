@@ -33,6 +33,7 @@ type Handlers struct {
 	vistors      []Visitor
 	serverConfig *config.ServerConfig
 	notifConfig  *config.NotifConfig
+	Hosts        []string
 }
 
 type File struct {
@@ -57,6 +58,7 @@ type IndexHTML struct {
 	Files        []File
 	CurrentPath  string
 	Uid          string
+	Hosts        []string
 	ServerConfig IndexHTMLConfig
 }
 
@@ -65,6 +67,7 @@ type IndexHTML struct {
 type ViewHTML struct {
 	File         string
 	MimeType     string
+	Hosts        []string
 	ServerConfig IndexHTMLConfig
 }
 
@@ -204,6 +207,7 @@ func (h *Handlers) ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl.ExecuteTemplate(w, "view.html", ViewHTML{
 		File:     file,
 		MimeType: utils.StandardizeMimeType(mimeType),
+		Hosts:    h.Hosts,
 		ServerConfig: IndexHTMLConfig{
 			Name:         h.serverConfig.Name,
 			AllowUploads: h.serverConfig.AllowUploads,
@@ -367,6 +371,8 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		Files:       files,
 		CurrentPath: currentPath,
 		Uid:         uid,
+		Hosts:       h.Hosts,
+
 		ServerConfig: IndexHTMLConfig{
 			Name:         h.serverConfig.Name,
 			AllowUploads: h.serverConfig.AllowUploads,
