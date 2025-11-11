@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func GetSNetTDir() (string, error) {
@@ -63,4 +64,18 @@ func FmtBytes(bytes int64) string {
 	default:
 		return fmt.Sprintf("%d bytes", bytes)
 	}
+}
+
+func StandardizeMimeType(mimeType string) string {
+	mimeType = strings.ToLower(mimeType)
+
+	if strings.Contains(mimeType, "image") {
+		return "image"
+	} else if strings.Contains(mimeType, "video") {
+		return "video"
+	} else if strings.Contains(mimeType, "csv") {
+		return "csv"
+	}
+
+	return mimeType
 }

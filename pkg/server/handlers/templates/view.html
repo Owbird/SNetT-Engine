@@ -22,7 +22,18 @@
         <source src="/download?file={{ .File }}&view=1" />
         Your browser does not support the video tag.
       </video>
+      {{ else if eq .MimeType "csv" }}
+      <div class="csv-preview">
+        <h3>CSV Content Preview</h3>
+        <div id="csv-table-container" class="csv-table-container">
+        </div>
+      </div>
+      <script>
+        window.csvFilePath = "/download?file={{ .File }}&view=1";
+      </script>
       {{ end }}
     </div>
+    <script src="/assets/papaparse.min.js"></script>
+    <script src="/assets/view.js"></script>
   </body>
 </html>

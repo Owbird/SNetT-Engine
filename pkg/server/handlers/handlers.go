@@ -203,7 +203,7 @@ func (h *Handlers) ViewFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl.ExecuteTemplate(w, "view.html", ViewHTML{
 		File:     file,
-		MimeType: strings.ToLower(strings.Split(mimeType, "/")[0]),
+		MimeType: utils.StandardizeMimeType(mimeType),
 		ServerConfig: IndexHTMLConfig{
 			Name:         h.serverConfig.Name,
 			AllowUploads: h.serverConfig.AllowUploads,
