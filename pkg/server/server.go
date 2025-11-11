@@ -80,12 +80,15 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 	handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
 
 	for _, host := range hosts {
+
+		fmtedHost := fmt.Sprintf("http://%s:%d", host, port)
+
 		s.logCh <- models.ServerLog{
-			Value: host,
+			Value: fmtedHost,
 			Type:  models.SERVE_UI_LOCAL,
 		}
 
-		handlerFuncs.Hosts = append(handlerFuncs.Hosts, fmt.Sprintf("http://%s:%d", host, port))
+		handlerFuncs.Hosts = append(handlerFuncs.Hosts, fmtedHost)
 	}
 
 	if serverConfig.AllowOnline {
