@@ -21,6 +21,7 @@ import (
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"github.com/muesli/cache2go"
 )
 
 type Visitor struct {
@@ -332,40 +333,60 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		fullPath = h.dir
 	}
 
-	h.logCh <- models.ServerLog{
-		Value: fmt.Sprintf("Getting files for %v", fullPath),
-		Type:  models.API_LOG,
-	}
+	cache := cache2go.Cache("fileCache")
 
-	dirFiles, err := os.ReadDir(fullPath)
-	if err != nil {
-		http.Error(w, "Failed to list files", http.StatusInternalServerError)
-		return
-	}
+	cacheKey := fmt.Sprintf("%v-cache", fullPath)
 
-	for _, file := range dirFiles {
+	res, err := cache.Value(cacheKey)
 
-		info, err := file.Info()
+	if err == nil {
+		h.logCh <- models.ServerLog{
+			Value: fmt.Sprintf("Using cached files for %v", fullPath),
+			Type:  models.API_LOG,
+		}
+
+		cachedFiles := res.Data().(*[]File)
+		for _, file := range *cachedFiles {
+			files = append(files, file)
+		}
+	} else {
+
+		h.logCh <- models.ServerLog{
+			Value: fmt.Sprintf("Getting files for %v", fullPath),
+			Type:  models.API_LOG,
+		}
+
+		dirFiles, err := os.ReadDir(fullPath)
 		if err != nil {
 			http.Error(w, "Failed to list files", http.StatusInternalServerError)
 			return
 		}
 
-		fmtedFile := File{
-			Name:  file.Name(),
-			IsDir: file.IsDir(),
+		for _, file := range dirFiles {
+
+			info, err := file.Info()
+			if err != nil {
+				http.Error(w, "Failed to list files", http.StatusInternalServerError)
+				return
+			}
+
+			fmtedFile := File{
+				Name:  file.Name(),
+				IsDir: file.IsDir(),
+			}
+
+			if !fmtedFile.IsDir {
+				fmtedFile.Size = utils.FmtBytes(info.Size())
+			}
+
+			files = append(files, fmtedFile)
 		}
 
-		if !fmtedFile.IsDir {
-			fmtedFile.Size = utils.FmtBytes(info.Size())
-		}
+		cache.Add(cacheKey, 0, &files)
 
-		files = append(files, fmtedFile)
 	}
 
 	uid := uuid.NewString()
-
-	log.Println(uid)
 
 	tmpl.ExecuteTemplate(w, "index.html", IndexHTML{
 		Files:       files,

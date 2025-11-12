@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/localtunnel/go-localtunnel v0.0.0-20170326223115-8a804488f275
+	github.com/muesli/cache2go v0.0.0-20221011235721-518229cd8021
 	github.com/psanford/wormhole-william v1.0.7
 	github.com/rs/cors v1.11.0
 	github.com/spf13/cobra v1.8.0
