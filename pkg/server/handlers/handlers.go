@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Owbird/SNetT-Engine/internal/utils"
@@ -21,11 +22,14 @@ import (
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/muesli/cache2go"
 )
 
 type Visitor struct {
 	uid string
+}
+
+type CacheItem struct {
+	files []File
 }
 
 type Handlers struct {
@@ -35,6 +39,8 @@ type Handlers struct {
 	serverConfig *config.ServerConfig
 	notifConfig  *config.NotifConfig
 	Hosts        []string
+	cache        map[string]*CacheItem
+	cacheMutex   sync.RWMutex
 }
 
 type File struct {
@@ -105,6 +111,7 @@ func NewHandlers(
 		dir:          dir,
 		serverConfig: serverConfig,
 		notifConfig:  notifConfig,
+		cache:        make(map[string]*CacheItem),
 	}
 }
 
@@ -333,24 +340,18 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 		fullPath = h.dir
 	}
 
-	cache := cache2go.Cache("fileCache")
+	h.cacheMutex.RLock()
+	item, found := h.cache[fullPath]
+	h.cacheMutex.RUnlock()
 
-	cacheKey := fmt.Sprintf("%v-cache", fullPath)
-
-	res, err := cache.Value(cacheKey)
-
-	if err == nil {
+	if found {
 		h.logCh <- models.ServerLog{
 			Value: fmt.Sprintf("Using cached files for %v", fullPath),
 			Type:  models.API_LOG,
 		}
+		files = item.files
 
-		cachedFiles := res.Data().(*[]File)
-		for _, file := range *cachedFiles {
-			files = append(files, file)
-		}
 	} else {
-
 		h.logCh <- models.ServerLog{
 			Value: fmt.Sprintf("Getting files for %v", fullPath),
 			Type:  models.API_LOG,
@@ -382,8 +383,11 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 			files = append(files, fmtedFile)
 		}
 
-		cache.Add(cacheKey, 0, &files)
-
+		h.cacheMutex.Lock()
+		h.cache[fullPath] = &CacheItem{
+			files: files,
+		}
+		h.cacheMutex.Unlock()
 	}
 
 	uid := uuid.NewString()
