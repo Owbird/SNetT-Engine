@@ -4,6 +4,7 @@ package handlers
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -20,7 +21,6 @@ import (
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -115,6 +115,77 @@ func NewHandlers(
 		notifConfig:  notifConfig,
 		cache:        make(map[string]*CacheItem),
 	}
+}
+
+func (h *Handlers) getFiles(dir string) ([]File, error) {
+	files := []File{}
+
+	var fullPath string
+
+	if len(dir) > 0 {
+
+		if filepath.Base(dir) == ".." {
+			return files, fmt.Errorf("Invalid path")
+		}
+
+		fullPath = filepath.Join(h.dir, dir)
+
+	} else {
+		fullPath = h.dir
+	}
+
+	h.cacheMutex.RLock()
+	item, found := h.cache[fullPath]
+	h.cacheMutex.RUnlock()
+
+	if found {
+		h.logCh <- models.ServerLog{
+			Value: fmt.Sprintf("Using cached files for %v", fullPath),
+			Type:  models.API_LOG,
+		}
+		files = item.files
+
+	} else {
+		h.logCh <- models.ServerLog{
+			Value: fmt.Sprintf("Getting files for %v", fullPath),
+			Type:  models.API_LOG,
+		}
+
+		dirFiles, err := os.ReadDir(fullPath)
+		if err != nil {
+			return files, err
+		}
+
+		for _, file := range dirFiles {
+
+			info, err := file.Info()
+			if err != nil {
+				return files, err
+			}
+
+			fmtedFile := File{
+				Name:  file.Name(),
+				IsDir: file.IsDir(),
+			}
+
+			if !fmtedFile.IsDir {
+				fmtedFile.Size = utils.FmtBytes(info.Size())
+			}
+
+			files = append(files, fmtedFile)
+		}
+
+		h.cacheMutex.Lock()
+		h.cache[fullPath] = &CacheItem{
+			files: files,
+		}
+		h.cacheMutex.Unlock()
+	}
+
+
+log.Println(files)
+
+	return files, nil
 }
 
 func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
@@ -318,93 +389,20 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
-	files := []File{}
+func (h *Handlers) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, fmt.Sprintf("%v/index.html", getFrontendDir()))
 
-	query := r.URL.Query()
-
-	var fullPath string
-	var currentPath string
-
-	if len(query["dir"]) > 0 {
-		currentPath = query["dir"][0]
-
-		if filepath.Base(currentPath) == ".." {
-			http.Error(w, "Failed to list files", http.StatusInternalServerError)
-			return
-
-		}
-
-		fullPath = filepath.Join(h.dir, currentPath)
-
-	} else {
-		currentPath = "/"
-		fullPath = h.dir
-	}
-
-	h.cacheMutex.RLock()
-	item, found := h.cache[fullPath]
-	h.cacheMutex.RUnlock()
-
-	if found {
-		h.logCh <- models.ServerLog{
-			Value: fmt.Sprintf("Using cached files for %v", fullPath),
-			Type:  models.API_LOG,
-		}
-		files = item.files
-
-	} else {
-		h.logCh <- models.ServerLog{
-			Value: fmt.Sprintf("Getting files for %v", fullPath),
-			Type:  models.API_LOG,
-		}
-
-		dirFiles, err := os.ReadDir(fullPath)
-		if err != nil {
-			http.Error(w, "Failed to list files", http.StatusInternalServerError)
-			return
-		}
-
-		for _, file := range dirFiles {
-
-			info, err := file.Info()
-			if err != nil {
-				http.Error(w, "Failed to list files", http.StatusInternalServerError)
-				return
-			}
-
-			fmtedFile := File{
-				Name:  file.Name(),
-				IsDir: file.IsDir(),
-			}
-
-			if !fmtedFile.IsDir {
-				fmtedFile.Size = utils.FmtBytes(info.Size())
-			}
-
-			files = append(files, fmtedFile)
-		}
-
-		h.cacheMutex.Lock()
-		h.cache[fullPath] = &CacheItem{
-			files: files,
-		}
-		h.cacheMutex.Unlock()
-	}
-
-	uid := uuid.NewString()
-
-	tmpl.ExecuteTemplate(w, "index.html", IndexHTML{
-		Files:       files,
-		CurrentPath: currentPath,
-		Uid:         uid,
-		Hosts:       h.Hosts,
-
-		ServerConfig: IndexHTMLConfig{
-			Name:         h.serverConfig.Name,
-			AllowUploads: h.serverConfig.AllowUploads,
-		},
-	})
+	// tmpl.ExecuteTemplate(w, "index.html", IndexHTML{
+	// 	Files:       files,
+	// 	CurrentPath: currentPath,
+	// 	Uid:         uid,
+	// 	Hosts:       h.Hosts,
+	//
+	// 	ServerConfig: IndexHTMLConfig{
+	// 		Name:         h.serverConfig.Name,
+	// 		AllowUploads: h.serverConfig.AllowUploads,
+	// 	},
+	// })
 }
 
 func (h *Handlers) GetAssets(w http.ResponseWriter, r *http.Request) {
@@ -439,6 +437,7 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
+			return
 		}
 		log.Printf("recv: %s", message)
 
@@ -456,6 +455,25 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 			if err != nil {
 				log.Println("write:", err)
 			}
+		} else if strings.Contains(string(message), "FILES:") {
+			dir := strings.Split(string(message), ": ")[1]
+
+			files, err := h.getFiles(dir)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			filesJson, _ := json.Marshal(files)
+
+			log.Println(string(filesJson))
+
+			err = c.WriteMessage(mt, []byte(fmt.Sprintf("FILES: %v", string(filesJson))))
+			if err != nil {
+				log.Println("write:", err)
+			}
+
+
 		}
 	}
 }

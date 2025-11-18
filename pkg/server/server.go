@@ -122,7 +122,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 
 		mux := http.NewServeMux()
 
-		mux.HandleFunc("/", handlerFuncs.GetFilesHandler)
+		mux.HandleFunc("/", handlerFuncs.IndexHandler)
 		mux.HandleFunc("/connect", func(w http.ResponseWriter, r *http.Request) {
 			handlerFuncs.HandleConnect(&upgrader, w, r)
 		})
