@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
@@ -14,19 +14,19 @@ function App() {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("/");
   const [visitorId, setVisitorId] = useState("");
-
-  const ws = new WebSocket(`ws://192.168.0.102:9091/connect`);
-  // const ws = new WebSocket(`ws://${window.location.host}/connect`);
+  const ws = useRef(null);
 
   useEffect(() => {
-    ws.onopen = async function (evt) {
+    ws.current = new WebSocket(`ws://${window.location.host}/connect`);
+
+    ws.current.onopen = async () => {
       const id = await getId();
       setVisitorId(id);
-      ws.send(`CONNECT: ${id}`);
-      ws.send(`FILES: ${currentPath}`);
+      ws.current.send(`CONNECT: ${id}`);
+      ws.current.send(`FILES: /`);
     };
 
-    ws.onmessage = function (evt) {
+    ws.current.onmessage = (evt) => {
       const message = evt.data;
 
       console.log(message);
@@ -38,19 +38,25 @@ function App() {
       }
     };
 
-    ws.onclose = () => {
+    ws.current.onclose = () => {
       console.log("WebSocket disconnected.");
     };
 
-    ws.onerror = (error) => {
+    ws.current.onerror = (error) => {
       console.error("WebSocket error:", error);
+    };
+
+    const wsCurrent = ws.current;
+
+    return () => {
+      wsCurrent.close();
     };
   }, []);
 
   const navigateTo = (path) => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       setCurrentPath(path);
-      ws.send(`FILES: ${path}`);
+      ws.current.send(`FILES: ${path}`);
     }
   };
 
