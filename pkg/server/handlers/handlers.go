@@ -80,7 +80,7 @@ type ViewHTML struct {
 
 var tmpl *template.Template
 
-func getCwd() string {
+func getFrontendDir() string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		log.Fatalln("Failed to get templates dir")
@@ -88,7 +88,9 @@ func getCwd() string {
 
 	cwd := filepath.Dir(filename)
 
-	return cwd
+	frontendDir := filepath.Join(cwd, "frontend", "dist")
+
+	return frontendDir
 }
 
 func NewHandlers(
@@ -97,9 +99,9 @@ func NewHandlers(
 	serverConfig *config.ServerConfig,
 	notifConfig *config.NotifConfig,
 ) *Handlers {
-	cwd := getCwd()
+	frontendDir := getFrontendDir()
 
-	tpl, err := template.ParseGlob(filepath.Join(cwd, "templates/*.html"))
+	tpl, err := template.ParseGlob(filepath.Join(frontendDir, "/*.html"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -406,10 +408,10 @@ func (h *Handlers) GetFilesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) GetAssets(w http.ResponseWriter, r *http.Request) {
-	cwd := getCwd()
+	frontendDir := getFrontendDir()
 
 	path := r.URL.Path
-	data, err := os.ReadFile(filepath.Join(cwd, "templates", path))
+	data, err := os.ReadFile(filepath.Join(frontendDir, path))
 	if err != nil {
 		fmt.Print(err)
 		http.NotFound(w, r)
