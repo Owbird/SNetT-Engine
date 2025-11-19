@@ -10,6 +10,58 @@ const getId = async () => {
   return result.visitorId;
 };
 
+const Breadcrumbs = ({ path, navigateTo }) => {
+  const parts = path.split("/").filter(Boolean);
+  const breadcrumbs = [{ name: "Root", path: "/" }];
+
+  let currentPath = "";
+  for (const part of parts) {
+    currentPath += `/${part}`;
+    breadcrumbs.push({ name: part, path: currentPath });
+  }
+
+  return (
+    <nav className="flex mb-4" aria-label="Breadcrumb">
+      <ol className="inline-flex items-center space-x-1 md:space-x-3">
+        {breadcrumbs.map((crumb, index) => (
+          <li key={index} className="inline-flex items-center">
+            {index > 0 && (
+              <svg
+                className="w-6 h-6 text-gray-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                ></path>
+              </svg>
+            )}
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (index < breadcrumbs.length - 1) {
+                  navigateTo(crumb.path);
+                }
+              }}
+              className={`ml-1 text-sm font-medium ${
+                index === breadcrumbs.length - 1
+                  ? "text-gray-400 cursor-default"
+                  : "text-blue-600 hover:underline"
+              }`}
+            >
+              {crumb.name}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  );
+};
+
 function App() {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("/");
@@ -70,43 +122,11 @@ function App() {
     }
   };
 
-  const handleBackClick = () => {
-    if (currentPath !== "/") {
-      const parentPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
-      navigateTo(parentPath === "" ? "/" : parentPath);
-    }
-  };
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">File Browser</h1>
-      <p className="mb-2">Current Path: {currentPath}</p>
+      <Breadcrumbs path={currentPath} navigateTo={navigateTo} />
       <p className="mb-4">Visitor ID: {visitorId}</p>
-
-      <div className="flex space-x-2 mb-4">
-        {currentPath !== "/" && (
-          <button
-            onClick={handleBackClick}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              ></path>
-            </svg>
-            Back
-          </button>
-        )}
-      </div>
 
       <div className="bg-white shadow-md rounded my-6">
         <table className="min-w-full table-auto">
