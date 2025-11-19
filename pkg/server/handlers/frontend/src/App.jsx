@@ -66,6 +66,7 @@ function App() {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState("/");
   const [visitorId, setVisitorId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const ws = useRef(null);
 
   useEffect(() => {
@@ -122,10 +123,23 @@ function App() {
     }
   };
 
+  const filteredFiles = files.filter((file) =>
+    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">File Browser</h1>
       <Breadcrumbs path={currentPath} navigateTo={navigateTo} />
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search files and directories..."
+          className="w-full px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
       <p className="mb-4">Visitor ID: {visitorId}</p>
 
       <div className="bg-white shadow-md rounded my-6">
@@ -138,7 +152,7 @@ function App() {
             </tr>
           </thead>
           <tbody className="text-gray-600 text-sm font-light">
-            {files.map((file, index) => (
+            {filteredFiles.map((file, index) => (
               <tr
                 key={index}
                 className="border-b border-gray-200 hover:bg-gray-100 cursor-pointer"
