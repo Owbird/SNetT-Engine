@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import "./App.css";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
@@ -67,6 +67,7 @@ function App() {
   const [currentPath, setCurrentPath] = useState("/");
   const [visitorId, setVisitorId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortDirection, setSortDirection] = useState("asc");
   const ws = useRef(null);
 
   useEffect(() => {
@@ -123,9 +124,33 @@ function App() {
     }
   };
 
+  const handleSort = () => {
+    setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+  };
+
   const filteredFiles = files.filter((file) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const sortedAndFilteredFiles = useMemo(() => {
+    let sortableFiles = [...filteredFiles];
+    sortableFiles.sort((a, b) => {
+      if (a.is_dir && !b.is_dir) return -1;
+      if (!a.is_dir && b.is_dir) return 1;
+
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+
+      if (nameA < nameB) {
+        return sortDirection === "asc" ? -1 : 1;
+      }
+      if (nameA > nameB) {
+        return sortDirection === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    return sortableFiles;
+  }, [filteredFiles, sortDirection]);
 
   return (
     <div className="container mx-auto p-4">
@@ -146,13 +171,22 @@ function App() {
         <table className="min-w-full table-auto">
           <thead>
             <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-              <th className="py-3 px-6 text-left">Name</th>
+              <th className="py-3 px-6 text-left">
+                <button onClick={handleSort} className="flex items-center">
+                  Name
+                  {sortDirection === "asc" ? (
+                    <span className="ml-2">▲</span>
+                  ) : (
+                    <span className="ml-2">▼</span>
+                  )}
+                </button>
+              </th>
               <th className="py-3 px-6 text-left">Type</th>
               <th className="py-3 px-6 text-left">Size</th>
             </tr>
           </thead>
           <tbody className="text-gray-600 text-sm font-light">
-            {filteredFiles.map((file, index) => (
+            {sortedAndFilteredFiles.map((file, index) => (
               <tr
                 key={index}
                 className="border-b border-gray-200 hover:bg-gray-100 cursor-pointer"
