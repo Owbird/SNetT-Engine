@@ -182,8 +182,7 @@ func (h *Handlers) getFiles(dir string) ([]File, error) {
 		h.cacheMutex.Unlock()
 	}
 
-
-log.Println(files)
+	log.Println(files)
 
 	return files, nil
 }
@@ -441,8 +440,7 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 		}
 		log.Printf("recv: %s", message)
 
-		if strings.Contains(string(message), "CONNECT:") {
-			uid := strings.Split(string(message), ": ")[1]
+		if uid := utils.ParseWsMessage(message, "CONNECT:"); uid != "" {
 			h.vistors = append(h.vistors, Visitor{
 				uid: uid,
 			})
@@ -455,8 +453,7 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 			if err != nil {
 				log.Println("write:", err)
 			}
-		} else if strings.Contains(string(message), "FILES:") {
-			dir := strings.Split(string(message), ": ")[1]
+		} else if dir := utils.ParseWsMessage(message, "FILES:"); dir != "" {
 
 			files, err := h.getFiles(dir)
 			if err != nil {
@@ -472,7 +469,6 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 			if err != nil {
 				log.Println("write:", err)
 			}
-
 
 		}
 	}

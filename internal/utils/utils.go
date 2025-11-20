@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+func ParseWsMessage(message []byte, identifier string) string {
+	if strings.Contains(string(message), identifier) {
+		return strings.Split(string(message), ": ")[1]
+	}
+
+	return ""
+}
+
 func GetSNetTDir() (string, error) {
 	userDir, err := os.UserHomeDir()
 	if err != nil {
