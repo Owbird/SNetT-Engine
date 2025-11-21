@@ -68,6 +68,7 @@ function App() {
   const [visitorId, setVisitorId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [config, setConfig] = useState();
   const ws = useRef(null);
 
   useEffect(() => {
@@ -87,6 +88,8 @@ function App() {
 
       if (message.startsWith("FILES:")) {
         setFiles(JSON.parse(message.replace("FILES: ", "")));
+      } else if (message.startsWith("CONFIG:")) {
+        setConfig(JSON.parse(message.replace("CONFIG: ", "")));
       } else {
         console.log("RESPONSE: " + evt.data);
       }
@@ -129,7 +132,7 @@ function App() {
   };
 
   const filteredFiles = files.filter((file) =>
-    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+    file.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const sortedAndFilteredFiles = useMemo(() => {
@@ -152,9 +155,13 @@ function App() {
     return sortableFiles;
   }, [filteredFiles, sortDirection]);
 
+
+  if (!config) return <div>Loading...</div>;
+
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">File Browser</h1>
+      <h1 className="text-2xl font-bold mb-4">{config.Name}</h1>
       <Breadcrumbs path={currentPath} navigateTo={navigateTo} />
       <div className="mb-4">
         <input

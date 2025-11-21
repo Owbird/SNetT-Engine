@@ -449,10 +449,13 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 				Value: uid,
 				Type:  models.WS_NEW_VISITOR,
 			}
-			err = c.WriteMessage(mt, []byte("CONNECTION SUCCESFUL"))
+			configJson, _ := json.Marshal(h.serverConfig)
+
+			err = c.WriteMessage(mt, []byte(fmt.Sprintf("CONFIG: %v", string(configJson))))
 			if err != nil {
 				log.Println("write:", err)
 			}
+
 		} else if dir := utils.ParseWsMessage(message, "FILES:"); dir != "" {
 
 			files, err := h.getFiles(dir)
