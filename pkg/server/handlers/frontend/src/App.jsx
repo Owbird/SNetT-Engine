@@ -388,7 +388,7 @@ function App() {
             </div>
           </div>
 
-          <div className="bg-white shadow-lg rounded-lg">
+          <div className="bg-white shadow-lg rounded-lg overflow-x-auto">
             <table className="min-w-full table-auto">
               <thead className="bg-gray-200">
                 <tr>
@@ -430,48 +430,50 @@ function App() {
                               </div>
                             </div>
 
-                            <table className="min-w-full">
-                              <tbody>
-                                {groupItems.map((file, idx) => (
-                                  <tr
-                                    key={`${file.name}-${idx}`}
-                                    className="border-b hover:bg-gray-50 cursor-pointer"
-                                    onClick={() => handleFileClick(file)}
-                                  >
-                                    <td className="py-4 px-6">
-                                      <div className="flex items-center gap-4">
-                                        <div className="text-2xl text-gray-600">
-                                          {file.is_dir ? (
-                                            <Icon.Directories />
-                                          ) : group === "Pictures" ? (
-                                            <Icon.Pictures />
-                                          ) : group === "Videos" ? (
-                                            <Icon.Videos />
-                                          ) : group === "Music" ? (
-                                            <Icon.Music />
-                                          ) : group === "Documents" ? (
-                                            <Icon.Documents />
-                                          ) : (
-                                            <Icon.Others />
-                                          )}
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full">
+                                <tbody>
+                                  {groupItems.map((file, idx) => (
+                                    <tr
+                                      key={`${file.name}-${idx}`}
+                                      className="border-b hover:bg-gray-50 cursor-pointer"
+                                      onClick={() => handleFileClick(file)}
+                                    >
+                                      <td className="py-4 px-6">
+                                        <div className="flex items-center gap-4">
+                                          <div className="text-2xl text-gray-600">
+                                            {file.is_dir ? (
+                                              <Icon.Directories />
+                                            ) : group === "Pictures" ? (
+                                              <Icon.Pictures />
+                                            ) : group === "Videos" ? (
+                                              <Icon.Videos />
+                                            ) : group === "Music" ? (
+                                              <Icon.Music />
+                                            ) : group === "Documents" ? (
+                                              <Icon.Documents />
+                                            ) : (
+                                              <Icon.Others />
+                                            )}
+                                          </div>
+                                          <div className="truncate font-medium">
+                                            {file.name}
+                                          </div>
                                         </div>
-                                        <div className="truncate font-medium">
-                                          {file.name}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td className="py-4 px-6">
-                                      {file.is_dir
-                                        ? "Directory"
-                                        : file.category}
-                                    </td>
-                                    <td className="py-4 px-6">
-                                      {file.is_dir ? "-" : file.size}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                      </td>
+                                      <td className="py-4 px-6">
+                                        {file.is_dir
+                                          ? "Directory"
+                                          : file.category}
+                                      </td>
+                                      <td className="py-4 px-6">
+                                        {file.is_dir ? "-" : file.size}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </td>
                         </tr>
                       );
