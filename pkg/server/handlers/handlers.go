@@ -52,6 +52,9 @@ type File struct {
 
 	// Size of the file in bytes
 	Size string `json:"size"`
+
+	// MimeType of the file
+	MimeType string `json:"mimeType"`
 }
 
 type IndexHTMLConfig struct {
@@ -163,9 +166,12 @@ func (h *Handlers) getFiles(dir string) ([]File, error) {
 				return files, err
 			}
 
+			mimetype := mime.TypeByExtension(filepath.Ext(file.Name()))
+
 			fmtedFile := File{
-				Name:  file.Name(),
-				IsDir: file.IsDir(),
+				Name:     file.Name(),
+				IsDir:    file.IsDir(),
+				MimeType: mimetype,
 			}
 
 			if !fmtedFile.IsDir {
