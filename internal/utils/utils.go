@@ -44,7 +44,7 @@ func GetLocalIp() ([]string, error) {
 
 		for _, addr := range addrs {
 			ip, ok := addr.(*net.IPNet)
-			if ok && !ip.IP.IsLoopback() {
+			if ok && !ip.IP.IsLoopback() && ip.IP.IsPrivate() {
 				v4 := ip.IP.To4()
 				if v4 != nil {
 					localIps = append(localIps, v4.String())

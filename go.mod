@@ -4,7 +4,6 @@ go 1.22.1
 
 require (
 	github.com/atotto/clipboard v0.1.4
-	github.com/google/uuid v1.4.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/localtunnel/go-localtunnel v0.0.0-20170326223115-8a804488f275
