@@ -1,6 +1,6 @@
 module github.com/Owbird/SNetT-Engine
 
-go 1.22.1
+go 1.25.4
 
 require (
 	github.com/atotto/clipboard v0.1.4
@@ -18,6 +18,7 @@ require (
 	github.com/deckarep/gosx-notifier v0.0.0-20180201035817-e127226297fb // indirect
 	github.com/miekg/dns v1.1.27 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
+	github.com/sgtdi/fswatcher v1.2.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	gopkg.in/toast.v1 v1.0.0-20180812000517-0a84660828b2 // indirect
 )
@@ -42,7 +43,7 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/crypto v0.21.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
-	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

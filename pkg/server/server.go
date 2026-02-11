@@ -79,6 +79,8 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 
 	handlerFuncs := handlers.NewHandlers(s.logCh, s.Dir, tempConfig.GetSeverConfig(), tempConfig.GetNotifConfig())
 
+	go handlerFuncs.WatchFiles()
+
 	for _, host := range hosts {
 
 		fmtedHost := fmt.Sprintf("http://%s:%d", host, port)

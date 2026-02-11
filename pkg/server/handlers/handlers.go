@@ -4,6 +4,7 @@ package handlers
 
 import (
 	"archive/zip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -22,6 +23,7 @@ import (
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/gorilla/websocket"
+	"github.com/sgtdi/fswatcher"
 )
 
 type Visitor struct {
@@ -118,6 +120,30 @@ func NewHandlers(
 		notifConfig:  notifConfig,
 		cache:        make(map[string]*CacheItem),
 	}
+}
+
+func (h *Handlers) WatchFiles() {
+	w, _ := fswatcher.New(
+		fswatcher.WithCooldown(200*time.Millisecond),
+		fswatcher.WithPath(h.dir),
+	)
+
+	ctx := context.Background()
+	go w.Watch(ctx)
+	fmt.Println("fswatcher started, change a file in watcher dir")
+
+	for event := range w.Events() {
+
+		dir := filepath.Dir(event.Path)
+
+		h.cacheMutex.RLock()
+		delete(h.cache, dir)
+		h.cacheMutex.RUnlock()
+
+		h.getFiles(dir)
+
+	}
+
 }
 
 func (h *Handlers) getFiles(dir string) ([]File, error) {
