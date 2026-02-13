@@ -134,7 +134,7 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 		mux.HandleFunc("GET /assets/{file}", handlerFuncs.GetAssets)
 
 		corsOpts := cors.New(cors.Options{
-			AllowedOrigins: []string{"https://*.loca.lt"},
+			AllowedOrigins: []string{"*"},
 			AllowedMethods: []string{
 				http.MethodGet,
 				http.MethodOptions,
