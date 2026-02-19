@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"log"
+	"os"
 	"sync"
 
+	"github.com/Owbird/SNetT-Engine/internal/logger"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/Owbird/SNetT-Engine/pkg/server"
@@ -29,7 +30,8 @@ var startCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, err := cmd.Flags().GetString("dir")
 		if err != nil {
-			log.Fatalf("Failed to get 'dir' flag: %v", err)
+			logger.Logger.Error("Failed to get 'dir' flag", "err", err)
+			os.Exit(1)
 		}
 
 		logCh := make(chan models.ServerLog)
@@ -39,17 +41,17 @@ var startCmd = &cobra.Command{
 			for l := range logCh {
 				switch l.Type {
 				case models.API_LOG:
-					log.Printf("[+] API Log: %v", l.Value)
+					logger.Logger.Info("API Log", "value", l.Value)
 				case models.SERVE_UI_LOCAL:
-					log.Printf("[+] Network Web Running: %v", l.Value)
+					logger.Logger.Info("Network Web Running", "value", l.Value)
 				case models.SERVE_UI_REMOTE:
-					log.Printf("[+] Remote Web Running: %v", l.Value)
+					logger.Logger.Info("Remote Web Running", "value", l.Value)
 				case models.WS_NEW_VISITOR:
-					log.Printf("[+] New visitor: %v", l.Value)
+					logger.Logger.Info("New visitor", "value", l.Value)
 				case models.SERVER_ERROR:
-					log.Printf("[!] Server Error: %v", l.Value)
+					logger.Logger.Error("Server Error", "value", l.Value)
 				default:
-					log.Printf("[+] Server Log: %v", l.Value)
+					logger.Logger.Info("Server Log", "value", l.Value)
 				}
 			}
 		}()
@@ -101,7 +103,7 @@ var listCmd = &cobra.Command{
 
 		idx := 1
 		for s := range servers {
-			log.Printf("[%v] (%v)  http://%v:%v", idx, s.Name, s.IP, s.Port)
+			logger.Logger.Info("Server found", "index", idx, "name", s.Name, "ip", s.IP, "port", s.Port)
 			idx++
 		}
 	},

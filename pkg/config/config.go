@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
+	"github.com/Owbird/SNetT-Engine/internal/logger"
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
 	"github.com/atotto/clipboard"
@@ -48,7 +48,8 @@ type AppConfig struct {
 func NewAppConfig() *AppConfig {
 	userDir, err := utils.GetSNetTDir()
 	if err != nil {
-		log.Fatalln("Failed to get user dir")
+		logger.Logger.Error("Failed to get user dir", "err", err)
+		os.Exit(1)
 	}
 
 	viper.SetConfigName("snett")
@@ -58,7 +59,8 @@ func NewAppConfig() *AppConfig {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		log.Fatalln(err)
+		logger.Logger.Error("Failed to get hostname", "err", err)
+		os.Exit(1)
 	}
 
 	viper.SetDefault("server.name", fmt.Sprintf("%v's Server", hostname))
@@ -72,7 +74,8 @@ func NewAppConfig() *AppConfig {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			viper.SafeWriteConfig()
 		} else {
-			log.Fatalf("Error reading config file: %s", err)
+			logger.Logger.Error("Error reading config file", "err", err)
+			os.Exit(1)
 		}
 	}
 
@@ -80,7 +83,8 @@ func NewAppConfig() *AppConfig {
 
 	err = viper.Unmarshal(&config)
 	if err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
+		logger.Logger.Error("unable to decode into struct", "err", err)
+		os.Exit(1)
 	}
 
 	return &config

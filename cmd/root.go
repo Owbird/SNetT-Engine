@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/Owbird/SNetT-Engine/internal/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -23,5 +24,5 @@ func Execute() {
 }
 
 func init() {
-
+	logger.Init()
 }

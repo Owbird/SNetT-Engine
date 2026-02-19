@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"os"
@@ -19,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Owbird/SNetT-Engine/internal/logger"
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
@@ -88,7 +88,8 @@ var tmpl *template.Template
 func getFrontendDir() string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
-		log.Fatalln("Failed to get templates dir")
+		logger.Logger.Error("Failed to get templates dir")
+		os.Exit(1)
 	}
 
 	cwd := filepath.Dir(filename)
@@ -108,7 +109,8 @@ func NewHandlers(
 
 	tpl, err := template.ParseGlob(filepath.Join(frontendDir, "/*.html"))
 	if err != nil {
-		log.Fatal(err)
+		logger.Logger.Error("Failed to parse glob", "err", err)
+		os.Exit(1)
 	}
 
 	tmpl = tpl
@@ -130,7 +132,7 @@ func (h *Handlers) WatchFiles() {
 
 	ctx := context.Background()
 	go w.Watch(ctx)
-	fmt.Println("fswatcher started, change a file in watcher dir")
+	logger.Logger.Info("fswatcher started, change a file in watcher dir")
 
 	for event := range w.Events() {
 
@@ -214,8 +216,6 @@ func (h *Handlers) getFiles(dir string) ([]File, error) {
 		h.cacheMutex.Unlock()
 	}
 
-	log.Println(files)
-
 	return files, nil
 }
 
@@ -226,7 +226,7 @@ func (h *Handlers) GetFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	reader, err := r.MultipartReader()
 	if err != nil {
-		log.Println(err)
+		logger.Logger.Error("MultipartReader error", "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -347,7 +347,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 		tmpDir, err := os.MkdirTemp("", "snett-*")
 		if err != nil {
-			log.Println(err, "this")
+			logger.Logger.Error("MkdirTemp error", "err", err)
 			http.Error(w, "Failed to download file", http.StatusInternalServerError)
 			return
 		}
@@ -355,7 +355,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 		archivePath := filepath.Join(tmpDir, fmt.Sprintf("snett-%v.zip", time.Now().UnixNano()), "")
 		archive, err := os.Create(archivePath)
 		if err != nil {
-			log.Println(err)
+			logger.Logger.Error("Create archive error", "err", err)
 			http.Error(w, "Failed to download file", http.StatusInternalServerError)
 			return
 		}
@@ -369,7 +369,7 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 			file, err := os.Open(filePath)
 			if err != nil {
-				log.Println(err)
+				logger.Logger.Error("Open file error", "err", err)
 				http.Error(w, "Failed to download file", http.StatusInternalServerError)
 				return
 			}
@@ -378,12 +378,12 @@ func (h *Handlers) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 			zip, err := zipWriter.Create(f)
 			if err != nil {
-				log.Println(err)
+				logger.Logger.Error("Create zip error", "err", err)
 				http.Error(w, "Failed to download file", http.StatusInternalServerError)
 				return
 			}
 			if _, err := io.Copy(zip, file); err != nil {
-				log.Println(err)
+				logger.Logger.Error("Copy to zip error", "err", err)
 				http.Error(w, "Failed to download file", http.StatusInternalServerError)
 				return
 			}
@@ -442,7 +442,7 @@ func (h *Handlers) GetAssets(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	data, err := os.ReadFile(filepath.Join(frontendDir, path))
 	if err != nil {
-		fmt.Print(err)
+		logger.Logger.Error("Failed to read asset", "err", err)
 		http.NotFound(w, r)
 		return
 	}
@@ -453,7 +453,7 @@ func (h *Handlers) GetAssets(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = w.Write(data)
 	if err != nil {
-		fmt.Print(err)
+		logger.Logger.Error("Failed to write asset", "err", err)
 	}
 }
 
@@ -467,10 +467,10 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			logger.Logger.Error("read message error", "err", err)
 			return
 		}
-		log.Printf("recv: %s", message)
+		logger.Logger.Info("recv", "message", string(message))
 
 		if uid := utils.ParseWsMessage(message, "CONNECT:"); uid != "" {
 			h.vistors = append(h.vistors, Visitor{
@@ -485,24 +485,24 @@ func (h *Handlers) HandleConnect(u *websocket.Upgrader, w http.ResponseWriter, r
 
 			err = c.WriteMessage(mt, []byte(fmt.Sprintf("CONFIG: %v", string(configJson))))
 			if err != nil {
-				log.Println("write:", err)
+				logger.Logger.Error("write message error", "err", err)
 			}
 
 		} else if dir := utils.ParseWsMessage(message, "FILES:"); dir != "" {
 
 			files, err := h.getFiles(dir)
 			if err != nil {
-				log.Println(err)
+				logger.Logger.Error("getFiles error", "err", err)
 				return
 			}
 
 			filesJson, _ := json.Marshal(files)
 
-			log.Println(string(filesJson))
+			logger.Logger.Info(string(filesJson))
 
 			err = c.WriteMessage(mt, []byte(fmt.Sprintf("FILES: %v", string(filesJson))))
 			if err != nil {
-				log.Println("write:", err)
+				logger.Logger.Error("write message error", "err", err)
 			}
 
 		}

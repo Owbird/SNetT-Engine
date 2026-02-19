@@ -4,13 +4,13 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/Owbird/SNetT-Engine/internal/logger"
 	"github.com/Owbird/SNetT-Engine/internal/utils"
 	"github.com/Owbird/SNetT-Engine/pkg/config"
 	"github.com/Owbird/SNetT-Engine/pkg/models"
@@ -157,7 +157,8 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 				Value: err.Error(),
 				Type:  models.SERVER_ERROR,
 			}
-			log.Fatalln(err)
+			logger.Logger.Error("ListenAndServe error", "err", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -177,10 +178,11 @@ func (s *Server) Start(tempConfig config.AppConfig) {
 
 // List shows the broadcasted servers on the network
 func (s *Server) List(servers chan<- models.SNetTServer) {
-	log.Println("Scanning...")
+	logger.Logger.Info("Scanning...")
 	resolver, err := zeroconf.NewResolver(nil)
 	if err != nil {
-		log.Fatalln("Failed to initialize resolver:", err.Error())
+		logger.Logger.Error("Failed to initialize resolver", "err", err)
+		os.Exit(1)
 	}
 	defer close(servers)
 
@@ -201,7 +203,8 @@ func (s *Server) List(servers chan<- models.SNetTServer) {
 
 	err = resolver.Browse(ctx, MdnsServiceName, "local.", entries)
 	if err != nil {
-		log.Fatalln("Failed to browse:", err.Error())
+		logger.Logger.Error("Failed to browse", "err", err)
+		os.Exit(1)
 	}
 
 	<-ctx.Done()
